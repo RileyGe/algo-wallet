@@ -33,23 +33,24 @@
     <Style Selector="StackPanel.border">
       <Setter Property="Margin" Value="5"/>
     </Style>
-    <Style Selector="StackPanel#sp_showMnemonic > StackPanel">
+    <Style Selector="StackPanel.mnemonic > StackPanel">
       <Setter Property="Orientation" Value="Horizontal"/>
       <Setter Property="Margin" Value="0 5"/>
     </Style>
-    <Style Selector="StackPanel#sp_showMnemonic > StackPanel > StackPanel">
+    <Style Selector="StackPanel.mnemonic > StackPanel > StackPanel">
       <Setter Property="Margin" Value="5 0 5 0"/>
       <Setter Property="Width" Value="90"/>
       <Setter Property="Orientation" Value="Horizontal"/>
+      <Setter Property="Height" Value="20"/>
     </Style>
-    <Style Selector="StackPanel#sp_showMnemonic > StackPanel > StackPanel > TextBlock">
+    <Style Selector="StackPanel.mnemonic > StackPanel > StackPanel > TextBlock">
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Width" Value="20"/>
     </Style>
-    <Style Selector="StackPanel.mnemonic">
-      <Setter Property="Margin" Value="5 0 5 0"/>
-      <Setter Property="Width" Value="90"/>
-    </Style>    
+    <Style Selector="StackPanel.mnemonic > StackPanel > StackPanel > TextBox">
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Margin" Value="0"/>
+    </Style>
     <Style Selector="Border.walletborder">
       <Setter Property="BorderBrush" Value="Gray"/>
       <Setter Property="Margin" Value="5"/>
@@ -165,7 +166,7 @@
       <TextBlock Classes="h1" Margin="0 30 0 20">New Wallet</TextBlock>
       <TextBlock Margin="0 0 0 10" TextWrapping="Wrap">Please take note of the following words. They make the recovery phrase for your new account:</TextBlock>
       <Border Classes="walletborder">
-        <StackPanel Orientation="Vertical" Name="sp_showMnemonic">
+        <StackPanel Orientation="Vertical" Name="sp_showMnemonic" Classes="mnemonic">
           <StackPanel>
             <StackPanel>
               <TextBlock>1.</TextBlock>
@@ -260,49 +261,108 @@
       </StackPanel>
     </StackPanel>
     <StackPanel Name="sp_newWallet_step2" IsVisible="False">
-      <TextBlock>New Wallet</TextBlock>
-      <TextBlock>1. Wallet name</TextBlock>
-      <TextBox></TextBox>
-      <TextBlock>2. Please enter and fill out the empty boxes below to verify your mnemonic phrase key</TextBlock>
-      <StackPanel Orientation="Vertical" Name="sp_verifyMnemonic">
-        <StackPanel Orientation="Horizontal">
-          <StackPanel Orientation="Horizontal"><TextBlock>1.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>2.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>3.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>4.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>5.</TextBlock></StackPanel>          
+      <TextBlock Classes="h1">New Wallet</TextBlock>
+      <TextBlock HorizontalAlignment="Left" Margin="0 10">1. Wallet name</TextBlock>
+      <TextBox Width="550" HorizontalAlignment="Left" Name="tb_walletName"></TextBox>
+      <TextBlock Margin="0 10 0 5">2. Please enter and fill out the empty boxes below to verify your mnemonic phrase key</TextBlock>
+      <Border Classes="walletborder">
+        <StackPanel Orientation="Vertical" Name="sp_verifyMnemonic" Classes="mnemonic">
+          <StackPanel>
+            <StackPanel>
+              <TextBlock>1.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>2.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>3.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>4.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>5.</TextBlock>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel>
+            <StackPanel>
+              <TextBlock>6.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>7.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>8.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>9.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>10.</TextBlock>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel>
+            <StackPanel>
+              <TextBlock>11.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>12.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>13.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>14.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>15.</TextBlock>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel>
+            <StackPanel>
+              <TextBlock>16.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>17.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>18.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>19.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>20.</TextBlock>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel>
+            <StackPanel>
+              <TextBlock>21.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>22.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>23.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>24.</TextBlock>
+            </StackPanel>
+            <StackPanel>
+              <TextBlock>25.</TextBlock>
+            </StackPanel>
+          </StackPanel>
         </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <StackPanel Orientation="Horizontal"><TextBlock>6.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>7.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>8.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>9.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>10.</TextBlock></StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <StackPanel Orientation="Horizontal"><TextBlock>11.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>12.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>13.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>14.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>15.</TextBlock></StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <StackPanel Orientation="Horizontal"><TextBlock>16.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>17.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>18.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>19.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>20.</TextBlock></StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <StackPanel Orientation="Horizontal"><TextBlock>21.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>22.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>23.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>24.</TextBlock></StackPanel>
-          <StackPanel Orientation="Horizontal"><TextBlock>25.</TextBlock></StackPanel>
-        </StackPanel>
+      </Border>
+      <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 5 0 15">
+        <TextBlock HorizontalAlignment="Left" Margin="0 10" Width="150">3. Choose a password:</TextBlock>
+        <TextBox Width="400" FontSize="16" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center" 
+                 Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
       </StackPanel>
-      <Button>Cancel</Button>
-      <Button>Create Wallet</Button>
+      <StackPanel Orientation="Horizontal">
+        <Button Classes="btn">Cancel</Button>
+        <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>
+      </StackPanel>      
     </StackPanel>
 
     <StackPanel Name="sp_createAsset" IsVisible="False" Orientation="Vertical">
@@ -343,6 +403,21 @@
       <StackPanel Orientation="Horizontal">
         <Button>Cancle</Button>
         <Button Click="OnDoCreateAssetClick">Create</Button>
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel Name="sp_enterPassword" IsVisible="False" Orientation="Vertical" 
+                HorizontalAlignment="Center">
+      <TextBlock Classes="h1" Margin="0 40 0 0">Enter The Password</TextBlock>
+      <TextBlock Margin="150 20 0 0">Before you must enter a password of an account.</TextBlock>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 40 0 0">
+        <ComboBox Width="100" Name="cb_accountList" SelectedIndex="0">
+        </ComboBox>
+        <TextBox Width="400" Name="tb_enterPassword" PasswordChar="*" FontWeight="16"></TextBox>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Margin="0 60 0 0">
+        <Button Classes="btn" Click="OnCloseWindow">Close</Button>
+        <Button Classes="btn" Click="OnPasswordEntered">OK</Button>
       </StackPanel>
     </StackPanel>
   </StackPanel>

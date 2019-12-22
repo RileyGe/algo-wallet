@@ -12,6 +12,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using MessageBox.Avalonia;
+using MessageBox.Avalonia.Enums;
+using MessageBox.Avalonia.DTO;
+using Org.BouncyCastle.Crypto.Generators;
+using System.Text;
 
 namespace AlgoWallet.Views
 {
@@ -28,7 +33,11 @@ namespace AlgoWallet.Views
         StackPanel initApiInfo = null;
         StackPanel sideBar = null;
         TabItem algoOperation = null;
+        StackPanel enterPassword = null;
+        ComboBox accountList = null;
         List<string> mnemonic = new List<string>();
+        Dictionary<int, TextBox> mnemonicBoxes = new Dictionary<int, TextBox>();
+        //List<TextBox> mnemonicBoxes = new List<TextBox>();
         //const string apiAddress = "http://hackathon.algodev.network:9100";
         //const string apiToken = "ef920e2e7e002953f4b29a8af720efe8e4ecc75ff102b165e0472834b25832c1";
         AlgodApi algoInstance = null;
@@ -38,10 +47,11 @@ namespace AlgoWallet.Views
         List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>> accountAssets = 
             new List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>();
         ulong assetId = 0;
+        private string accountPassword = "";
 
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent();            
             settings = new ConfigurationBuilder<IAppSettings>()
                 .UseJsonFile("config.db")
                 .Build();
@@ -50,7 +60,13 @@ namespace AlgoWallet.Views
             sideBar = this.FindControl<StackPanel>("sp_sideBar");
             walletManagePanel = this.FindControl<StackPanel>("sp_walletManage");
             assetsListPanel = this.FindControl<StackPanel>("sp_assetsList");
+            enterPassword = this.FindControl<StackPanel>("sp_enterPassword");
+            accountList = this.FindControl<ComboBox>("cb_accountList");
+            m_SyncContext = SynchronizationContext.Current;
             bool connected = true;
+#if DEBUG
+            this.AttachDevTools();
+#endif
             if (!(settings.AlogApiAddress is null || settings.AlgoApiToken is null ||
                 settings.AlogApiAddress == "" || settings.AlgoApiToken == ""))
             {
@@ -79,23 +95,22 @@ namespace AlgoWallet.Views
                 walletOperationTabControl.IsVisible = false;
                 walletManagePanel.IsVisible = true;
             }
-            
-            
-            
+            else
+            {
+                sideBar.IsVisible = false;
+                walletOperationTabControl.IsVisible = false;
+                enterPassword.IsVisible = true;
+                accountList.Items = settings.Accounts;
+            }
             //algoInstance ??= new AlgodApi(apiAddress, apiToken);
-            //init an default account for test pupose
-            
-            algoAccount = new Account("typical permit hurdle hat song detail cattle merge oxygen crowd arctic cargo smooth fly rice vacuum lounge yard frown predict west wife latin absent cup");
+            //init an default account for test pupose            
+            //algoAccount = new Account("typical permit hurdle hat song detail cattle merge oxygen crowd arctic cargo smooth fly rice vacuum lounge yard frown predict west wife latin absent cup");
             //algoAccount = new Account("portion never forward pill lunch organ biology"
             //                          + " weird catch curve isolate plug innocent skin grunt"
             //                          + " bounce clown mercy hole eagle soul chunk type absorb trim");
             //this.DataContext
-            m_SyncContext = SynchronizationContext.Current;
+            
             //new Thread(new ThreadStart(this.ThreadProcSafePost)).Start();
-
-#if DEBUG
-            this.AttachDevTools();
-#endif
         }
 
         private void TestingConnection(object message)
@@ -204,6 +219,39 @@ namespace AlgoWallet.Views
             urlAndtoken[1] = this.FindControl<TextBox>("tb_apiToken").Text;
             new Thread(new ParameterizedThreadStart(this.TestingConnection)).Start(urlAndtoken);
         }
+        public void OnCloseWindow(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+        public void OnPasswordEntered(object sender, RoutedEventArgs e)
+        {
+            var walletName = accountList.SelectedItem.ToString();
+            var index = new List<string>(settings.Accounts).IndexOf(walletName);
+            var passwordTextBox = this.FindControl<TextBox>("tb_enterPassword");
+            var enteredPassword = passwordTextBox.Text.Trim();
+            if(OpenBsdBCrypt.CheckPassword(settings.Passwords[index],
+                enteredPassword.ToCharArray()))
+            {
+                accountPassword = enteredPassword;
+                var seed = CryptoUtils.DecryptAES(accountPassword, settings.Mnemonics[index]);
+                algoAccount = new Account(seed);
+                sideBar.IsVisible = true;
+                walletOperationTabControl.IsVisible = true;
+                enterPassword.IsVisible = false;
+            }
+            else
+            {
+                var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Password Not Right",
+                    ContentMessage = "The wallet name and password not match, please try again."
+                });
+                msBoxStandardWindow.ShowDialog(this);
+                passwordTextBox.Text = "";
+                passwordTextBox.Focus();
+            }
+        }
         public void OnSaveApiClicked(object sender, RoutedEventArgs e)
         {            
             var url = this.FindControl<TextBox>("tb_apiUrl").Text;
@@ -281,6 +329,7 @@ namespace AlgoWallet.Views
                 if (needVerifyPositions.Count > 3)
                     break;
             }
+            mnemonicBoxes.Clear();
             for(int i = 0; i < 5; i++)
             {
                 for(int j = 0; j < 5; j++)
@@ -289,20 +338,135 @@ namespace AlgoWallet.Views
                     var pos = i * 5 + j;
                     if (needVerifyPositions.Contains(pos))
                     {
-                        item.Children.Add(new TextBox());
+                        //var btnName = "tb_mnemonic_" + pos.ToString();                        
+                        var box = new TextBox() { Width = 70 };
+                        //box.DataContextChanged += this.Box_DataContextChanged;
+                        mnemonicBoxes.Add(pos, box);
+                        item.Children.Add(box);
                     }
                     else
                     {
-                        item.Children.Add(new TextBlock
-                        {
-                            Text = mnemonic[i * 5 + j]
-                        });
+                        Border bd = new Border() { Classes = new Classes("oneword") };
+                        bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
+                        item.Children.Add(bd);                        
                     }
                 }
             }            
             newWalletStep1.IsVisible = false;
             newWalletStep2.IsVisible = true;
-        }   
+        }
+        private void Box_DataContextChanged(object sender, EventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+        private void OnCreateWalletFinishClicked(object sender, RoutedEventArgs e)
+        {
+            var walletNameBox = this.FindControl<TextBox>("tb_walletName");
+            var walletName = walletNameBox.Text;
+            if(walletName is null || walletName.Length < 1)
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Wallet Name Error",
+                    ContentMessage = "Please Enter the Wallet Name!"
+                });
+                msgBox.ShowDialog(this);
+                walletNameBox.Focus();
+                return;
+            }
+            foreach(var item in mnemonicBoxes)
+            {
+                //var box = this.FindControl<TextBox>(item);
+                var boxContent = item.Value.Text.Trim();
+                var index = item.Key;
+                if(boxContent != mnemonic[index])
+                {
+                    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                    {
+                        ButtonDefinitions = ButtonEnum.Ok,
+                        ContentTitle = "Mnemonic Error",
+                        ContentMessage = "Please Enter the Right Mnemonic Phrase!"
+                    });
+                    msgBox.ShowDialog(this);
+                    item.Value.Focus();
+                    return;
+                }
+            }
+            var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
+            var password = walletPassword.Text;
+            if (password is null || password.Length < 1)
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Wallet Password Error",
+                    ContentMessage = "Please Enter the Password!"
+                });
+                msgBox.ShowDialog(this);
+                walletPassword.Focus();
+                return;
+            }
+            accountPassword = password;
+            if (settings.Accounts == null || settings.Accounts.Length < 1)
+            {
+                settings.Accounts = new string[] { 
+                    this.FindControl<TextBox>("tb_walletName").Text.Trim() 
+                };
+            }
+            else
+            {
+                var accountList = new List<string>{
+                    this.FindControl<TextBox>("tb_walletName").Text.Trim() };
+                accountList.AddRange(settings.Accounts);
+                settings.Accounts = accountList.ToArray();
+            }            
+            if (settings.Passwords == null || settings.Passwords.Length < 1)
+            {
+                settings.Passwords = new string[] {
+                    CryptoUtils.GenerateBcryptHash(accountPassword)
+                };
+            }
+            else
+            {
+                var psdList = new List<string>
+                {
+                    CryptoUtils.GenerateBcryptHash(accountPassword)
+                };
+                psdList.AddRange(settings.Passwords);
+                settings.Passwords = psdList.ToArray();
+            }
+            var mnemonicString = GetMnemonicString(mnemonic);
+            algoAccount = new Account(mnemonicString);
+            var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
+            if (settings.Mnemonics == null || settings.Mnemonics.Length < 1)
+            {
+                settings.Mnemonics = new string[] {
+                    encryptedMasterKey
+                };
+            }
+            else
+            {
+                var keyList = new List<string>
+                {
+                    encryptedMasterKey
+                };
+                keyList.AddRange(settings.Mnemonics);
+                settings.Mnemonics = keyList.ToArray();
+            }
+            newWalletStep2.IsVisible = false;
+            walletOperationTabControl.IsVisible = true;
+            sideBar.IsVisible = true;
+        }
+
+        private string GetMnemonicString(List<string> mnemonic)
+        {
+            string retStr = "";
+            mnemonic.ForEach(item => retStr += item + " ");
+            return retStr.Trim();
+            //throw new NotImplementedException();
+        }
+
         public void OnCreateAssetClick(object sender, RoutedEventArgs e)
         {
             createAsset ??= this.FindControl<StackPanel>("sp_createAsset");

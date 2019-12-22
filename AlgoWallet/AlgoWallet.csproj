@@ -14,12 +14,12 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.9.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.9.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.0" />
+    <PackageReference Include="Algorand" Version="0.1.2.2" />
+    <PackageReference Include="Avalonia" Version="0.9.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.9.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.1" />
+    <PackageReference Include="BouncyCastle.NetCore" Version="1.8.5" />
     <PackageReference Include="Config.Net.Json" Version="4.14.16" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\dotnet-algorand-sdk\dotnet-algorand-sdk\dotnet-algorand-sdk.csproj" />
+    <PackageReference Include="MessageBox.Avalonia" Version="0.9.0-preview5" />
   </ItemGroup>
 </Project>
