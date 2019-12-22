@@ -57,6 +57,7 @@ namespace AlgoWallet.Views
                 .Build();
             initApiInfo = this.FindControl<StackPanel>("sp_initApiInfo");            
             walletOperationTabControl = this.FindControl<TabControl>("tc_walletOperation");
+            walletOperationTabControl.SelectionChanged += this.WalletOperationTabControl_SelectionChanged;
             sideBar = this.FindControl<StackPanel>("sp_sideBar");
             walletManagePanel = this.FindControl<StackPanel>("sp_walletManage");
             assetsListPanel = this.FindControl<StackPanel>("sp_assetsList");
@@ -111,6 +112,22 @@ namespace AlgoWallet.Views
             //this.DataContext
             
             //new Thread(new ThreadStart(this.ThreadProcSafePost)).Start();
+        }
+
+        private void WalletOperationTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(!sender.Equals(walletOperationTabControl))
+            {
+                return;
+            }
+            foreach(var item in walletOperationTabControl.Items)
+            {
+                var tabItem = item as TabItem;
+                tabItem.Classes.Remove("selected");
+            }
+            var selectedItem = walletOperationTabControl.SelectedItem as TabItem;
+            selectedItem.Classes.Add("selected");
+            //throw new NotImplementedException();
         }
 
         private void TestingConnection(object message)
@@ -458,7 +475,6 @@ namespace AlgoWallet.Views
             walletOperationTabControl.IsVisible = true;
             sideBar.IsVisible = true;
         }
-
         private string GetMnemonicString(List<string> mnemonic)
         {
             string retStr = "";
@@ -466,11 +482,10 @@ namespace AlgoWallet.Views
             return retStr.Trim();
             //throw new NotImplementedException();
         }
-
         public void OnCreateAssetClick(object sender, RoutedEventArgs e)
         {
             createAsset ??= this.FindControl<StackPanel>("sp_createAsset");
-
+            sideBar.IsVisible = false;
             walletOperationTabControl.IsVisible = false;
             createAsset.IsVisible = true;
         }

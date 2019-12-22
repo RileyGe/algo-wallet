@@ -13,6 +13,53 @@
       <vm:MainWindowViewModel/>      
   </Design.DataContext>
   <Window.Styles>
+    <Style Selector="TextBlock.narrowLabel">
+      <Setter Property="Width" Value="70"/>
+      <Setter Property="TextAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="0 0 5 0"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="TextBox.narrowInput">
+      <Setter Property="Width" Value="90"/>
+      <Setter Property="Margin" Value="0 0 10 0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="TextBlock.middelLabel">
+      <Setter Property="Width" Value="140"/>
+      <Setter Property="TextAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="0 0 5 0"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="TextBox.middleInput">
+      <Setter Property="Width" Value="195"/>
+      <Setter Property="Margin" Value="0 0 10 0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="TextBox.longInput">
+      <Setter Property="Width" Value="300"/>
+      <Setter Property="Margin" Value="0 0 10 0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="StackPanel.line">
+      <Setter Property="Margin" Value="0 5"/>
+    </Style>
+    <Style Selector="TabItem.selected">
+      <Setter Property="BorderThickness" Value="1 1 1 0"/>
+      <Setter Property="BorderBrush" Value="BlueViolet"/>
+      <Setter Property="Background" Value="LightGray"/>
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.selected">
+      <Setter Property="BorderThickness" Value="1 1 0 1"/>
+      <Setter Property="BorderBrush" Value="BlueViolet"/>
+      <Setter Property="Background" Value="LightGray"/>
+      <Setter Property="Height" Value="30"/>
+    </Style>
     <Style Selector="TextBlock.h1">
       <Setter Property="FontSize" Value="24"/>
       <Setter Property="FontWeight" Value="Bold"/>
@@ -99,16 +146,18 @@
       </StackPanel>
       <TextBlock Name="tb_testResult" IsVisible="False" Margin="50 40 0 0">Test Success!</TextBlock>
     </StackPanel>
-    <StackPanel Name="sp_sideBar" Orientation="Vertical" Width="200">
-      <StackPanel Name="sp_assetsList" Orientation="Vertical" MaxHeight="350">
-        <Button Name="btn_algo" Click="OnAlgoClick">Algos</Button>
-      </StackPanel>      
+    <StackPanel Name="sp_sideBar" Orientation="Vertical" Width="160">
+      <ScrollViewer MaxWidth="350" Margin="0 40 0 0">
+        <StackPanel Name="sp_assetsList" Orientation="Vertical" MaxHeight="350">
+          <Button Name="btn_algo" Click="OnAlgoClick" Classes="selected">Algos</Button>
+        </StackPanel>
+      </ScrollViewer>       
       <Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>      
       <Button Name="btn_settings">Settings</Button>
     </StackPanel>
-    <TabControl Margin="5 5 5 5" Name="tc_walletOperation">
-      <TabItem Header="Infomation" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Width="100">
-        <StackPanel Orientation="Vertical">
+    <TabControl Name="tc_walletOperation" Width="540">
+      <TabItem Classes="selected" Header="Infomation">
+        <StackPanel Orientation="Vertical" Background="LightGray" Margin="0" Height="354">
           <StackPanel Orientation="Horizontal">
             <TextBlock>Address:</TextBlock>
             <TextBox IsReadOnly="True" Name="tb_accountAddress"></TextBox>
@@ -118,26 +167,38 @@
           </ScrollViewer>
         </StackPanel>        
       </TabItem>
-      <TabItem Header="Send" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="100">
+      <TabItem Header="Send" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
         <StackPanel>
           <TextBlock Text="I am in the triangle page ! I'll put a button to show you that each page contains what you want." HorizontalAlignment="Left" VerticalAlignment="Center"/>
           <Button>A button in the triangle page !</Button>
         </StackPanel>
       </TabItem>
-      <TabItem Header="Receive" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="100">
+      <TabItem Header="Receive" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
         <StackPanel Orientation="Horizontal">
           <TextBlock Text="Square : " HorizontalAlignment="Left" VerticalAlignment="Center"/>
           <Rectangle Fill="Blue" Width="63" Height="41"/>
         </StackPanel>
       </TabItem>
-      <TabItem Name="ti_algoOperation" Header="Operations" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="100">
-        <StackPanel Orientation="Vertical">
-          <Button Click="OnCreateAssetClick">Create Asset</Button>
-          <StackPanel Orientation="Horizontal">
-            <TextBlock>Asset ID:</TextBlock>
-            <TextBox></TextBox>
-          </StackPanel>
-          <Button>Activate Asset</Button>
+      <TabItem Name="ti_algoOperation" Header="Operations" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+        <StackPanel Orientation="Horizontal" Background="LightGray" Height="354">
+          <Border Classes="walletborder" Margin="30 50 10 5" Height="300">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="200">
+              <TextBlock Classes="h2" Margin="5 10">Create Asset</TextBlock>
+              <TextBlock Classes="content" Width="190">Input information and create Algorand Standard Asset.</TextBlock>
+              <Button Margin="5 30 5 20" Click="OnCreateAssetClick">Create Asset</Button>
+            </StackPanel>
+          </Border>
+          <Border Classes="walletborder" Margin="10 50 5 5" Height="300">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="200">
+              <TextBlock Classes="h2" Margin="5 10">Activate Asset</TextBlock>
+              <TextBlock Classes="content" Width="190">Before using an asset, you should activate it first.</TextBlock>
+              <StackPanel Orientation="Horizontal" Height="20">
+                <TextBlock Width="60" Margin="5 0 0 0">Asset ID:</TextBlock>
+                <TextBox Width="130" BorderThickness="0 0 0 1" Padding="0" Margin="0" FontSize="12"></TextBox>
+              </StackPanel>
+              <Button  Margin="5 10 5 20">Activate Asset</Button>
+            </StackPanel>
+          </Border>
         </StackPanel>
       </TabItem>
     </TabControl>
@@ -366,44 +427,54 @@
     </StackPanel>
 
     <StackPanel Name="sp_createAsset" IsVisible="False" Orientation="Vertical">
-      <StackPanel Orientation="Horizontal">
-        <TextBlock>Name:</TextBlock>
-        <TextBox Name="tb_assetName"></TextBox>
-        <TextBlock>Unit:</TextBlock>
-        <TextBox Name="tb_unitName"></TextBox>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal">
-        <TextBlock>Total:</TextBlock>
-        <TextBox Name="tb_assetTotal"></TextBox>
-        <TextBlock>Frozen:</TextBlock>
-        <CheckBox Name="cb_assetFrozen"></CheckBox>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal">
-        <TextBlock>URL:</TextBlock>
-        <TextBox Name="tb_assetUrl"></TextBox>
-      </StackPanel>
-      <StackPanel Orientation="Vertical">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock>Manager Address:</TextBlock>
-          <TextBox Name="tb_assetManager"></TextBox>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <TextBlock>Reserver Address:</TextBlock>
-          <TextBox Name="tb_assetReserver"></TextBox>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <TextBlock>Clawbacker Address:</TextBlock>
-          <TextBox Name="tb_assetClawbacker"></TextBox>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-          <TextBlock>Freezer Address:</TextBlock>
-          <TextBox Name="tb_assetFreezer"></TextBox>
-        </StackPanel>
-      </StackPanel>
-      <StackPanel Orientation="Horizontal">
-        <Button>Cancle</Button>
-        <Button Click="OnDoCreateAssetClick">Create</Button>
-      </StackPanel>
+      <TextBlock Classes="h1">Create Asset</TextBlock>
+      <TextBlock Margin="120 20 0 20">Please enter the information to create Algorand Standard Asset.</TextBlock>
+      <Border Classes="walletborder" Padding="4 20">
+        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Classes="line">
+            <TextBlock Classes="narrowLabel">Name:</TextBlock>
+            <TextBox Name="tb_assetName" Classes="narrowInput"></TextBox>
+            <TextBlock Classes="narrowLabel">Unit:</TextBlock>
+            <TextBox Name="tb_unitName" Classes="narrowInput"></TextBox>
+            <TextBlock Classes="narrowLabel">Frozen:</TextBlock>
+            <CheckBox Name="cb_assetFrozen"></CheckBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Classes="line">
+            <TextBlock Classes="narrowLabel">Total:</TextBlock>
+            <TextBox Name="tb_assetTotal" Classes="narrowInput"></TextBox>
+            <TextBlock Classes="narrowLabel">Metadata:</TextBlock>
+            <TextBox Name="tb_metadatahash" Classes="middleInput"></TextBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Classes="line">
+            <TextBlock Classes="narrowLabel">Decimals:</TextBlock>
+            <TextBox Name="tb_assetDecimals" Classes="narrowInput"></TextBox>
+            <TextBlock Classes="narrowLabel">URL:</TextBlock>
+            <TextBox Name="tb_assetUrl" Classes="middleInput"></TextBox>            
+          </StackPanel>
+          <StackPanel Orientation="Vertical" Classes="line">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Classes="middelLabel">Manager Address:</TextBlock>
+              <TextBox Name="tb_assetManager" Classes="longInput"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Classes="line">
+              <TextBlock Classes="middelLabel">Reserve Address:</TextBlock>
+              <TextBox Name="tb_assetReserver" Classes="longInput"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Classes="line">
+              <TextBlock Classes="middelLabel">Clawbacke Address:</TextBlock>
+              <TextBox Name="tb_assetClawbacker" Classes="longInput"></TextBox>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Classes="line">
+              <TextBlock Classes="middelLabel">Freeze Address:</TextBlock>
+              <TextBox Name="tb_assetFreezer" Classes="longInput"></TextBox>
+            </StackPanel>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Classes="line">
+            <Button Classes="btn">Cancle</Button>
+            <Button Click="OnDoCreateAssetClick" Classes="btn">Create</Button>
+          </StackPanel>
+        </StackPanel>        
+      </Border>
     </StackPanel>
 
     <StackPanel Name="sp_enterPassword" IsVisible="False" Orientation="Vertical" 
