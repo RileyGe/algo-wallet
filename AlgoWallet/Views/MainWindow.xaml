@@ -3,10 +3,11 @@
         xmlns:vm="clr-namespace:AlgoWallet.ViewModels;assembly=AlgoWallet"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AlgoWallet"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
         x:Class="AlgoWallet.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Algo Asset Wallet" WindowState="Normal" 
+        Title="Algo Asset Wallet" WindowState="Normal"
         Height="400" Width="700"
         CanResize="False" WindowStartupLocation="CenterScreen">
   <Design.DataContext>
@@ -114,19 +115,26 @@
       <Setter Property="Width" Value="150"/>
     </Style>
   </Window.Styles>
-  <Window.ContentTemplate>
-    <DataTemplate>
-      <StackPanel>
-        <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto">
-          <TextBlock Grid.Row="0" Grid.Column="0">TxID:</TextBlock>
-          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Tx}"/>
-          <TextBlock Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Grid.ColumnSpan="1" Text="{Binding type}"/>
-          <TextBlock Grid.Row="1" Grid.Column="0">DateTime:</TextBlock>
-          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastName}"/>          
-        </Grid>
-      </StackPanel>
+  <Window.DataTemplates>
+    <DataTemplate DataType="{x:Type local:TransInfo}">
+      <Border BorderThickness="0 0 0 2" BorderBrush="Gray" Height="55">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Vertical" Margin="5 5 0 0">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Width="32" Margin="0 8">TxID:</TextBlock>
+                <TextBox Width="220" BorderThickness="0" Padding="0" Background="LightGray" AcceptsReturn="True"
+                         TextWrapping="Wrap" Text="{Binding TxID}"/>
+              </StackPanel>
+              <TextBlock Text="{Binding CreateTime}"/>
+            </StackPanel>
+            <TextBlock Margin="30 15 0 0" Width="120" Height="30" TextAlignment="Center" VerticalAlignment="Center" Text="{Binding Type}"/>
+            <TextBlock Margin="30 15 0 0" Height="30" VerticalAlignment="Center" Text="{Binding Amount}"/>
+          </StackPanel>
+        </StackPanel>
+      </Border>
     </DataTemplate>
-  </Window.ContentTemplate>
+  </Window.DataTemplates>
   <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Classes="border">
     <StackPanel Orientation="Vertical" HorizontalAlignment="Center"
                 Name="sp_initApiInfo" IsVisible="False">
@@ -156,30 +164,40 @@
       <Button Name="btn_settings">Settings</Button>
     </StackPanel>
     <TabControl Name="tc_walletOperation" Width="540">
-      <TabItem Classes="selected" Header="Infomation">
+      <TabItem Classes="selected" Header="Infomation" Width="150" HorizontalContentAlignment="Center">
         <StackPanel Orientation="Vertical" Background="LightGray" Margin="0" Height="354">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock>Address:</TextBlock>
-            <TextBox IsReadOnly="True" Name="tb_accountAddress"></TextBox>
-          </StackPanel>
-          <ScrollViewer Name="sv_transactions" Height="400">
-
+          <TextBlock Margin="0 10 0 10" FontSize="20" FontWeight="Medium" HorizontalAlignment="Center">Address</TextBlock>
+          <TextBox IsReadOnly="True" Name="tb_accountAddress" BorderThickness="0 0 0 1" Background="LightGray"
+                    Width="500" Padding="0" Height="20" FontSize="13" TextWrapping="Wrap"></TextBox>
+          <Border Margin="0 20 0 0" BorderBrush="Gray" BorderThickness="0 0 0 2" Height="20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+              <TextBlock Width="252" Margin="5 0 0 0" TextAlignment="Center">Information</TextBlock>
+              <TextBlock Width="120" Margin="30 0 0 0" TextAlignment="Center">Trans Type</TextBlock>
+              <TextBlock Width="100" Margin="30 0 0 0">Amount</TextBlock>
+            </StackPanel>
+          </Border>
+          <ScrollViewer Name="sv_transactions" Height="240" Width="530" 
+                        HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">            
+            <StackPanel Orientation="Vertical" Name="sp_transInfos">
+              
+            </StackPanel>            
           </ScrollViewer>
         </StackPanel>        
       </TabItem>
-      <TabItem Header="Send" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-        <StackPanel>
-          <TextBlock Text="I am in the triangle page ! I'll put a button to show you that each page contains what you want." HorizontalAlignment="Left" VerticalAlignment="Center"/>
-          <Button>A button in the triangle page !</Button>
+      <TabItem Header="Send" Width="150" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+        <StackPanel Orientation="Vertical" Background="LightGray" Height="354">          
+          <StackPanel Orientation="Horizontal" Margin="0 30 0 0">
+            <TextBlock Width="100" Text="Address:" TextAlignment="Right" Margin="0 3 0 0"/>
+            <TextBox Margin="20 0 0 0" Width="350"></TextBox>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0 30 0 0">
+            <TextBlock Width="100" Text="Amount:" TextAlignment="Right" Margin="0 3 0 0"/>
+            <TextBox Margin="20 0 0 0" Width="350"></TextBox>
+          </StackPanel>
+          <Button Margin="100 50 100 0">Send</Button>
         </StackPanel>
       </TabItem>
-      <TabItem Header="Receive" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Text="Square : " HorizontalAlignment="Left" VerticalAlignment="Center"/>
-          <Rectangle Fill="Blue" Width="63" Height="41"/>
-        </StackPanel>
-      </TabItem>
-      <TabItem Name="ti_algoOperation" Header="Operations" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+      <TabItem Width="150" Name="ti_algoOperation" Header="Operations" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
         <StackPanel Orientation="Horizontal" Background="LightGray" Height="354">
           <Border Classes="walletborder" Margin="30 50 10 5" Height="300">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="200">
@@ -317,7 +335,7 @@
       </Border>
           
       <StackPanel Orientation="Horizontal">
-        <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Cancel">Cancel</Button>
+        <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Cancel" Click="OnNewWalletStep1Cancel">Cancel</Button>
         <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Next" Click="OnNewWalletStep1ContinueClick">Continue</Button>
       </StackPanel>
     </StackPanel>
@@ -421,7 +439,7 @@
                  Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
       </StackPanel>
       <StackPanel Orientation="Horizontal">
-        <Button Classes="btn">Cancel</Button>
+        <Button Classes="btn" Click="OnNewWalletStep2Cancel">Cancel</Button>
         <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>
       </StackPanel>      
     </StackPanel>
@@ -470,7 +488,7 @@
             </StackPanel>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Classes="line">
-            <Button Classes="btn">Cancle</Button>
+            <Button Classes="btn" Click="OnCreateAssetCancle">Cancle</Button>
             <Button Click="OnDoCreateAssetClick" Classes="btn">Create</Button>
           </StackPanel>
         </StackPanel>        
