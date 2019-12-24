@@ -3,21 +3,21 @@ The algo-wallet is a crossplat form algo assets wallet, which using the Avalonia
 
 ## Screens
 
-![enter-password](images\enter-password.png)
+![enter-password](https://github.com/RileyGe/algo-wallet/blob/master/images/enter-password.png)
 
-![information](images\information.png)
+![information](https://github.com/RileyGe/algo-wallet/blob/master/images/information.png)
 
-![send](images\send.png)
+![send](https://github.com/RileyGe/algo-wallet/blob/master/images/send.png)
 
-![operations](images\operations.png)
+![operations](https://github.com/RileyGe/algo-wallet/blob/master/images/operations.png)
 
-![create-asset](images\create-asset.png)
+![create-asset](https://github.com/RileyGe/algo-wallet/blob/master/images/create-asset.png)
 
-![create-import-wallet](images\create-import-wallet.png)
+![create-import-wallet](https://github.com/RileyGe/algo-wallet/blob/master/images/create-import-wallet.png)
 
-![new-wallet-step1](images\new-wallet-step1.png)
+![new-wallet-step1](https://github.com/RileyGe/algo-wallet/blob/master/images/new-wallet-step1.png)
 
-![new-wallet-step2](images\new-wallet-step2.png)
+![new-wallet-step2](https://github.com/RileyGe/algo-wallet/blob/master/images/new-wallet-step2.png)
 
 ## Bugs
 
