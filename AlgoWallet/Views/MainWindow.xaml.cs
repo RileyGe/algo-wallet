@@ -1,20 +1,20 @@
 ﻿using Algorand;
+using Algorand.Algod.Client;
 using Algorand.Algod.Client.Api;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Config.Net;
+using MessageBox.Avalonia;
+using MessageBox.Avalonia.DTO;
+using MessageBox.Avalonia.Enums;
+using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using MessageBox.Avalonia;
-using MessageBox.Avalonia.Enums;
-using MessageBox.Avalonia.DTO;
-using Org.BouncyCastle.Crypto.Generators;
-using System.Text;
 using System.Linq;
-using Algorand.Algod.Client;
+using System.Text;
+using System.Threading;
 
 namespace AlgoWallet.Views
 {
@@ -34,6 +34,7 @@ namespace AlgoWallet.Views
         TabItem algoOperation = null;
         StackPanel enterPassword = null;
         ComboBox accountList = null;
+        //Thread updateingThread = null;
         List<string> mnemonic = new List<string>();
         Dictionary<int, TextBox> mnemonicBoxes = new Dictionary<int, TextBox>();
         //List<TextBox> mnemonicBoxes = new List<TextBox>();
@@ -101,7 +102,10 @@ namespace AlgoWallet.Views
             //};
             //this.FindControl<StackPanel>("sp_transInfos").Children.Add(info);
         }
-
+        public void OnChangeWalletClick(object sender, RoutedEventArgs e)
+        {
+            CheckAccount();
+        }
         private void CheckAccount()
         {
             if (settings.Accounts is null || settings.Accounts.Length < 1)
@@ -181,11 +185,13 @@ namespace AlgoWallet.Views
             var accAdr = algoAccount.Address.ToString();
             long? roundUtill = 0;//这个数字之前的round都已经获取
 
-            while (true)
+            while (accAdr == algoAccount.Address.ToString())
             {
                 try {
                     var act = algoInstance.AccountInformation(algoAccount.Address.ToString());
-                    m_SyncContext.Post(UpdateAlgoButton, act);
+                    if (accAdr == algoAccount.Address.ToString())                    
+                        m_SyncContext.Post(UpdateAlgoButton, act);
+                                       
                     foreach (var item in act.Assets)
                     {
                         while (true)
@@ -199,7 +205,8 @@ namespace AlgoWallet.Views
                                     accountAssets.Add(pair);
                                     //在线程中更新UI（通过UI线程同步上下文m_SyncContext）
                                     object[] state = new object[] { pair, act.GetHolding(pair.Key).Amount };
-                                    m_SyncContext.Post(UpdateAssetsList, state);
+                                    if (accAdr == algoAccount.Address.ToString())
+                                        m_SyncContext.Post(UpdateAssetsList, state);
                                 }
                                 break;
                             }
@@ -343,7 +350,8 @@ namespace AlgoWallet.Views
                     index, transInfo
                 };
                 //transList.Add(transInfo);
-                m_SyncContext.Post(UpdateTransListSP, param);
+                if(accAdr == algoAccount.Address.ToString())
+                    m_SyncContext.Post(UpdateTransListSP, param);
                 return true;
             }
             return false;
@@ -418,6 +426,41 @@ namespace AlgoWallet.Views
             }.Start(urlAndtoken);
             //new Thread(new ParameterizedThreadStart(this.TestingConnection)).Start();
         }
+        public void OnActivateAssetClick(object sender, RoutedEventArgs e)
+        {
+            var assetIdToActivate = this.FindControl<TextBox>("tb_assetIdToActivate");
+            ulong aid = 0;
+            if(assetIdToActivate.Text is null || assetIdToActivate.Text == "")
+            {
+                MessageBoxManager.GetMessageBoxStandardWindow("Asset ID Error", "Please enter the asset id.").ShowDialog(this);
+            }
+            else
+            {
+                try
+                {
+                    aid = Convert.ToUInt64(assetIdToActivate.Text);
+                }
+                catch (Exception)
+                {
+                    MessageBoxManager.GetMessageBoxStandardWindow("Asset ID Error", "The asset should be a interger, please enter the right asset id.").ShowDialog(this);
+                }
+                try
+                {
+                    var transParams = algoInstance.TransactionParams();
+                    var tx = Utils.GetActivateAssetTransaction(algoAccount.Address, aid, transParams, "opt in transaction by algo-wallet");
+
+                    var signedTx = algoAccount.SignTransaction(tx);
+                    var id = Utils.SubmitTransaction(algoInstance, signedTx);
+                }
+                catch (Exception apiex)
+                {
+                    //e.printStackTrace();
+                    MessageBoxManager.GetMessageBoxStandardWindow("Request Error", "Error hanppen:" + apiex.Message);
+                    //Console.WriteLine(apiex.Message);
+                    //return;
+                }
+            }
+        }
         public void OnCloseWindow(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -437,8 +480,10 @@ namespace AlgoWallet.Views
                 sideBar.IsVisible = true;
                 walletOperationTabControl.IsVisible = true;
                 enterPassword.IsVisible = false;
-                this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
-                new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
+                passwordTextBox.Text = "";
+                ChangeWalletRefresh();
+                //this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
+                //new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
             }
             else
             {
@@ -478,11 +523,11 @@ namespace AlgoWallet.Views
             //}
         }
         public void OnAssetClick(object sender, RoutedEventArgs e)
-        {
-            //var algoBtn = this.FindControl<TextBox>("btn_algo");
-            //algoBtn.Classes.Remove("selected");
+        {            
             if (sender is Button btn)
             {
+                var algoBtn = this.FindControl<Button>("btn_algo");
+                algoBtn.Classes.Remove("selected");
                 foreach (var item in assetsListPanel.Children)
                 {
                     if (item is Button button)
@@ -533,6 +578,7 @@ namespace AlgoWallet.Views
             //TabItem settingItem = get            
             newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step1");
             algoAccount = new Account();
+            mnemonic.Clear();
             mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
             showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
             for (int i = 0; i < 5; i++)
@@ -540,9 +586,14 @@ namespace AlgoWallet.Views
                 for (int j = 0; j < 5; j++)
                 {
                     var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
+                    if(item.Children.Count > 1)
+                    {
+                        item.Children.RemoveAt(1);
+                    }
                     Border bd = new Border() { Classes = new Classes("oneword") };
                     bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
-                    item.Children.Add(bd);                    
+                    item.Children.Add(bd);     
+                    
                 }
             }
             newWalletStep1.IsVisible = true;
@@ -708,7 +759,7 @@ namespace AlgoWallet.Views
         {
             var walletNameBox = this.FindControl<TextBox>("tb_walletName");
             var walletName = walletNameBox.Text;
-            if(walletName is null || walletName.Length < 1)
+            if (walletName is null || walletName.Length < 1)
             {
                 var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
                 {
@@ -720,12 +771,12 @@ namespace AlgoWallet.Views
                 walletNameBox.Focus();
                 return;
             }
-            foreach(var item in mnemonicBoxes)
+            foreach (var item in mnemonicBoxes)
             {
                 //var box = this.FindControl<TextBox>(item);
                 var boxContent = item.Value.Text.Trim();
                 var index = item.Key;
-                if(boxContent != mnemonic[index])
+                if (boxContent != mnemonic[index])
                 {
                     var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
                     {
@@ -755,8 +806,8 @@ namespace AlgoWallet.Views
             accountPassword = password;
             if (settings.Accounts == null || settings.Accounts.Length < 1)
             {
-                settings.Accounts = new string[] { 
-                    this.FindControl<TextBox>("tb_walletName").Text.Trim() 
+                settings.Accounts = new string[] {
+                    this.FindControl<TextBox>("tb_walletName").Text.Trim()
                 };
             }
             else
@@ -765,7 +816,7 @@ namespace AlgoWallet.Views
                     this.FindControl<TextBox>("tb_walletName").Text.Trim() };
                 accountList.AddRange(settings.Accounts);
                 settings.Accounts = accountList.ToArray();
-            }            
+            }
             if (settings.Passwords == null || settings.Passwords.Length < 1)
             {
                 settings.Passwords = new string[] {
@@ -802,7 +853,30 @@ namespace AlgoWallet.Views
             newWalletStep2.IsVisible = false;
             walletOperationTabControl.IsVisible = true;
             sideBar.IsVisible = true;
+            ChangeWalletRefresh();
         }
+
+        private void ChangeWalletRefresh()
+        {
+            //change the wallet
+            //step 0: change the address
+            this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
+            //step 1: clear the assets and assets buttons
+            accountAssets.Clear();
+            assetsListPanel.Children.Clear();
+            //step 2: clear the transactions and the transaction infomation
+            transList.Clear();
+            this.FindControl<StackPanel>("sp_transInfos").Children.Clear();
+            //step 3: runnig the updating
+            //if (!(updateingThread is null))
+            //    updateingThread.Abort();
+            
+            //updateingThread.c
+            //CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+            //new Task(() => this.UpdateAssetsAndTransactions(cancelTokenSource.Token), )
+            new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
+        }
+
         private string GetMnemonicString(List<string> mnemonic)
         {
             string retStr = "";

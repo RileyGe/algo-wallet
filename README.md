@@ -23,10 +23,10 @@ The algo-wallet is a crossplat form algo assets wallet, which using the Avalonia
 
 Record the bugs find but not fixed.
 
-1. 多次打开新建钱包会出现助记词的重叠。
+1. 多次打开新建钱包会出现助记词的重叠。--fixed
 2. 打开时不输入密码而直接新建或导入钱包。 --fixed
-3. 新建钱包后刷新状态。切换钱包  
+3. 新建钱包后刷新状态。切换钱包  --fixed
 4. 显示AssetID。--fixed
 5. 显示金额。--fixed
 6. 关闭后杀死后台进程。-- fixed
-7. 
+7. 转帐由资产数量不变

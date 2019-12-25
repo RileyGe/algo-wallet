@@ -155,12 +155,13 @@
       <TextBlock Name="tb_testResult" IsVisible="False" Margin="50 40 0 0">Test Success!</TextBlock>
     </StackPanel>
     <StackPanel Name="sp_sideBar" Orientation="Vertical" Width="160">
-      <ScrollViewer MaxWidth="350" Margin="0 40 0 0">
-        <StackPanel Name="sp_assetsList" Orientation="Vertical" MaxHeight="350">
-          <Button Name="btn_algo" Click="OnAssetClick" Classes="selected">Algos</Button>
+      <Button Name="btn_algo" Click="OnAssetClick" Classes="selected" Margin="0 40 0 0">Algos</Button>
+      <ScrollViewer MaxWidth="350">
+        <StackPanel Name="sp_assetsList" Orientation="Vertical" MaxHeight="350">          
         </StackPanel>
       </ScrollViewer>       
-      <Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>      
+      <Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>
+      <Button Name="btn_changeWallet" Click="OnChangeWalletClick">Change Wallet</Button>
       <Button Name="btn_settings">Settings</Button>
     </StackPanel>
     <TabControl Name="tc_walletOperation" Width="540">
@@ -225,9 +226,9 @@
               <TextBlock Classes="content" Width="190">Before using an asset, you should activate it first.</TextBlock>
               <StackPanel Orientation="Horizontal" Height="20">
                 <TextBlock Width="60" Margin="5 0 0 0">Asset ID:</TextBlock>
-                <TextBox Width="130" BorderThickness="0 0 0 1" Padding="0" Margin="0" FontSize="12"></TextBox>
+                <TextBox Width="130" BorderThickness="0 0 0 1" Padding="0" Margin="0" FontSize="12" Name="tb_assetIdToActivate"></TextBox>
               </StackPanel>
-              <Button  Margin="5 10 5 20">Activate Asset</Button>
+              <Button  Margin="5 10 5 20" Click="OnActivateAssetClick">Activate Asset</Button>
             </StackPanel>
           </Border>
         </StackPanel>
