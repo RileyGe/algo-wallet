@@ -14,11 +14,13 @@ using MessageBox.Avalonia.DTO;
 using Org.BouncyCastle.Crypto.Generators;
 using System.Text;
 using System.Linq;
+using Algorand.Algod.Client;
 
 namespace AlgoWallet.Views
 {
     public class MainWindow : Window
     {
+        int sleepTime = 5000;
         StackPanel walletManagePanel = null;
         TabControl walletOperationTabControl = null;
         StackPanel newWalletStep1 = null;
@@ -46,7 +48,7 @@ namespace AlgoWallet.Views
         List<TransInfo> transList = new List<TransInfo>();
         ulong selectedAssetId = 0;
         private string accountPassword = "";
-        ulong accountLastRound; //record the last round of the algoAccount
+        //ulong accountLastRound; //record the last round of the algoAccount
 
         public MainWindow()
         {
@@ -175,92 +177,178 @@ namespace AlgoWallet.Views
             //accountAssets.Clear();
             //transList.Clear();
             //...执行线程任务
-            var act = algoInstance.AccountInformation(algoAccount.Address.ToString());
-            
-            foreach (var item in act.Assets)
-            {
-                var ap = algoInstance.AssetInformation((long?)item.Key);
-                var pair = new KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>((ulong)item.Key, ap);
-                if (accountAssets.Count(p => p.Key == pair.Key) == 0)
-                {
-                    accountAssets.Add(pair);
-                    //在线程中更新UI（通过UI线程同步上下文m_SyncContext）
-                    m_SyncContext.Post(UpdateAssetsList, pair);
-                }                    
-            }
-            var transParams = algoInstance.TransactionParams();
-            long? lastRound = (long?)transParams.LastRound;
-            long? firstRound = this.accountLastRound == 0 ? lastRound - 1000 * 24 : (long?)accountLastRound;
-            ulong? balance = act.Amount;
-            //var block = algoInstance.GetBlock(3692494);
+            bool isListening = false;
             var accAdr = algoAccount.Address.ToString();
+            long? roundUtill = 0;//这个数字之前的round都已经获取
+
             while (true)
             {
-                ulong? lr = 0;
-                try
-                {
-                    var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
-                        firstRound: firstRound, lastRound: lastRound).Transactions;
-                    lr = 0;
-                    foreach (var item in translist)
+                try {
+                    var act = algoInstance.AccountInformation(algoAccount.Address.ToString());
+                    m_SyncContext.Post(UpdateAlgoButton, act);
+                    foreach (var item in act.Assets)
                     {
-                        if(transList.Count(p => p.TxID == item.Tx) == 0)
+                        while (true)
                         {
-                            var block = algoInstance.GetBlock((long?)item.Round);
-                            var transInfo = new TransInfo(item, accAdr)
+                            try
                             {
-                                CreateTime = ConvertIntDatetime((ulong)block.Timestamp)
-                            };
-                            var index = transList.FindIndex(p => p.CreateTime < transInfo.CreateTime);
-                            if (index < 0) {
-                                transList.Add(transInfo);
-                                lr = item.Round;
-                            }                                
-                            else
-                                transList.Insert(index, transInfo);
-                            object[] param = new object[]
-                            {
-                                index, transInfo
-                            };
-                            //transList.Add(transInfo);
-                            m_SyncContext.Post(UpdateTransListSP, param);
-                            //UpdateTransListSP(info);                        
-                            if (item.From == accAdr)
-                            {
-                                balance += item.Fee;
-                                balance -= item.Fromrewards;
-                            }
-                            if (item.Type == "pay")
-                            {
-                                if (item.From == accAdr)
+                                var ap = algoInstance.AssetInformation((long?)item.Key);
+                                var pair = new KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>((ulong)item.Key, ap);
+                                if (accountAssets.Count(p => p.Key == pair.Key) == 0)
                                 {
-                                    balance += item.Payment.Amount;
+                                    accountAssets.Add(pair);
+                                    //在线程中更新UI（通过UI线程同步上下文m_SyncContext）
+                                    object[] state = new object[] { pair, act.GetHolding(pair.Key).Amount };
+                                    m_SyncContext.Post(UpdateAssetsList, state);
                                 }
-                                else if (item.Payment.To == accAdr)
-                                {
-                                    balance -= item.Payment.Amount;
-                                }
+                                break;
                             }
-                        }                        
+                            catch (Exception) { Thread.Sleep(sleepTime); }
+                        }
+
                     }
+                    var transParams = algoInstance.TransactionParams();
+                    long? lastRound = (long?)transParams.LastRound;
+                    if (isListening)
+                    {
+                        long? firstRound = roundUtill;
+                        try
+                        {
+                            var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
+                                firstRound: firstRound, lastRound: lastRound).Transactions;
+                            foreach (var item in translist)
+                            {
+                                UpdateTransaction2UI(accAdr, item);
+                            }
 
+                        }
+                        catch (Exception) { }
+                        Thread.Sleep(sleepTime);
+                    }
+                    else
+                    {
+                        //inital                    
+
+                        roundUtill = lastRound;
+                        long? firstRound = lastRound - 1000 * 24;
+                        ulong? balance = act.Amount;
+                        //var block = algoInstance.GetBlock(3692494);
+
+                        while (true)
+                        {
+                            //ulong? lr = 0;
+                            try
+                            {
+                                var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
+                                    firstRound: firstRound, lastRound: lastRound).Transactions;
+                                //lr = 0;
+                                foreach (var item in translist)
+                                {
+                                    if (UpdateTransaction2UI(accAdr, item))
+                                    {
+                                        if (item.From == accAdr)
+                                        {
+                                            balance += item.Fee;
+                                            balance -= item.Fromrewards;
+                                        }
+                                        if (item.Type == "pay")
+                                        {
+                                            if (item.From == accAdr)
+                                            {
+                                                balance += item.Payment.Amount;
+                                            }
+                                            else if (item.Payment.To == accAdr)
+                                            {
+                                                balance -= item.Payment.Amount;
+                                            }
+                                        }
+                                    }
+                                    //if (transList.Count(p => p.TxID == item.Tx) == 0)
+                                    //{
+                                    //    var block = algoInstance.GetBlock((long?)item.Round);
+                                    //    var transInfo = new TransInfo(item, accAdr)
+                                    //    {
+                                    //        CreateTime = ConvertIntDatetime((ulong)block.Timestamp)
+                                    //    };
+                                    //    var index = transList.FindIndex(p => p.CreateTime < transInfo.CreateTime);
+                                    //    if (index < 0)
+                                    //    {
+                                    //        transList.Add(transInfo);
+                                    //        //lr = item.Round;
+                                    //    }
+                                    //    else
+                                    //        transList.Insert(index, transInfo);
+                                    //    object[] param = new object[]
+                                    //    {
+                                    //index, transInfo
+                                    //    };
+                                    //    //transList.Add(transInfo);
+                                    //    m_SyncContext.Post(UpdateTransListSP, param);
+                                    //    //UpdateTransListSP(info);  
+                                    //}
+                                }
+
+                            }
+                            catch (Exception) { }
+                            //if (accountLastRound > 0) break;
+                            if (balance == 0)
+                            {
+                                //accountLastRound = (ulong)lr;
+                                isListening = true;
+                                break;
+                            }
+                            else
+                            {
+                                lastRound = firstRound;
+                                firstRound = lastRound - 1000 * 24;
+                            }
+                        }
+                    }
                 }
-                catch (Exception) { }
-                if (accountLastRound > 0) break;
-                if (balance == 0)
+                catch(Exception)
                 {
-                    accountLastRound = (ulong)lr;
-                    break;
-                }
-                else
-                {
-                    lastRound = firstRound;
-                    firstRound = lastRound - 1000 * 24;
-                }
+                    Thread.Sleep(sleepTime);
+                }                
             }
-
             //algoInstance.transaction
         }
+
+        private void UpdateAlgoButton(object state)
+        {
+            if(state is Algorand.Algod.Client.Model.Account act)
+            {
+                this.FindControl<Button>("btn_algo").Content = string.Format("Algos({0})", Utils.MicroalgosToAlgos((ulong)act.Amount));
+            }            
+        }
+
+        private bool UpdateTransaction2UI(string accAdr, Algorand.Algod.Client.Model.Transaction item)
+        {
+            if (transList.Count(p => p.TxID == item.Tx) == 0)
+            {
+                var block = algoInstance.GetBlock((long?)item.Round);
+                var transInfo = new TransInfo(item, accAdr)
+                {
+                    CreateTime = ConvertIntDatetime((ulong)block.Timestamp)
+                };
+                var index = transList.FindIndex(p => p.CreateTime < transInfo.CreateTime);
+                if (index < 0)
+                {
+                    transList.Add(transInfo);
+                    //lr = item.Round;
+                }
+                else
+                    transList.Insert(index, transInfo);
+                object[] param = new object[]
+                {
+                    index, transInfo
+                };
+                //transList.Add(transInfo);
+                m_SyncContext.Post(UpdateTransListSP, param);
+                return true;
+            }
+            return false;
+        }
+
         private void UpdateTransListSP(object transInfo)
         {
             if(transInfo is object[] objs)
@@ -290,16 +378,29 @@ namespace AlgoWallet.Views
         }
         private void UpdateAssetsList(object state)
         {
-            if (state is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair)
+            if(state is object[] objectList)
             {
-                Button btn = new Button()
+                if(objectList[0] is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair && objectList[1] is ulong amount)
                 {
-                    Content = pair.Value.Assetname,
-                    Name = "btn_" + pair.Key.ToString()
-                };
-                btn.Click += OnAssetClick;
-                assetsListPanel.Children.Add(btn);
+                    Button btn = new Button()
+                    {
+                        Content = string.Format("{0}({1})", pair.Value.Assetname, amount), 
+                        Name = "btn_" + pair.Key.ToString()
+                    };
+                    btn.Click += OnAssetClick;
+                    assetsListPanel.Children.Add(btn);
+                }
             }
+            //if (state is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair)
+            //{
+            //    Button btn = new Button()
+            //    {
+            //        Content = pair.Value.Assetname,
+            //        Name = "btn_" + pair.Key.ToString()
+            //    };
+            //    btn.Click += OnAssetClick;
+            //    assetsListPanel.Children.Add(btn);
+            //}
         }
 
         private void InitializeComponent()
@@ -311,7 +412,11 @@ namespace AlgoWallet.Views
             var urlAndtoken = new string[2];
             urlAndtoken[0] = this.FindControl<TextBox>("tb_apiUrl").Text;
             urlAndtoken[1] = this.FindControl<TextBox>("tb_apiToken").Text;
-            new Thread(new ParameterizedThreadStart(this.TestingConnection)).Start(urlAndtoken);
+            new Thread(new ParameterizedThreadStart(this.TestingConnection))
+            {
+                IsBackground = true
+            }.Start(urlAndtoken);
+            //new Thread(new ParameterizedThreadStart(this.TestingConnection)).Start();
         }
         public void OnCloseWindow(object sender, RoutedEventArgs e)
         {
@@ -333,7 +438,7 @@ namespace AlgoWallet.Views
                 walletOperationTabControl.IsVisible = true;
                 enterPassword.IsVisible = false;
                 this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
-                new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)).Start();
+                new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
             }
             else
             {
@@ -374,22 +479,53 @@ namespace AlgoWallet.Views
         }
         public void OnAssetClick(object sender, RoutedEventArgs e)
         {
-            var btn = sender as Button;
-            selectedAssetId = Convert.ToUInt64(btn.Name.Split('_')[1]);
-            algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
-            algoOperation.IsVisible = false;
+            //var algoBtn = this.FindControl<TextBox>("btn_algo");
+            //algoBtn.Classes.Remove("selected");
+            if (sender is Button btn)
+            {
+                foreach (var item in assetsListPanel.Children)
+                {
+                    if (item is Button button)
+                    {
+                        button.Classes.Remove("selected");
+                    }
+                }
+                btn.Classes.Add("selected");
+                if (btn.Name == "btn_algo")
+                {
+                    selectedAssetId = 0;
+                    algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
+                    algoOperation.IsVisible = true;
+                    this.FindControl<StackPanel>("sp_assetIdInfo").IsVisible = false;
+                }
+                else
+                {
+                    selectedAssetId = Convert.ToUInt64(btn.Name.Split('_')[1]);
+                    algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
+                    var assetIdInfo = this.FindControl<StackPanel>("sp_assetIdInfo");
+                    assetIdInfo.IsVisible = true;
+                    if(assetIdInfo.Children[1] is TextBox box)
+                    {
+                        box.Text = selectedAssetId.ToString();
+                    }
+                    algoOperation.IsVisible = false;
+                }
+            }
+            //var btn = sender as Button;            
         }
-        public void OnAlgoClick(object sender, RoutedEventArgs e)
-        {
-            selectedAssetId = 0;
-            algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
-            algoOperation.IsVisible = true;
-        }
+        //public void OnAlgoClick(object sender, RoutedEventArgs e)
+        //{
+
+        //    selectedAssetId = 0;
+        //    algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
+        //    algoOperation.IsVisible = true;
+        //}
         public void OnWalletClick(object sender, RoutedEventArgs e)
         {
             //TabItem settingItem = get            
             walletOperationTabControl.IsVisible = false;
             sideBar.IsVisible = false;
+            enterPassword.IsVisible = false;
             walletManagePanel.IsVisible = true;
         }
         public void OnNewWalletClick(object sender, RoutedEventArgs e)
@@ -458,6 +594,105 @@ namespace AlgoWallet.Views
             newWalletStep1.IsVisible = false;
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
+        }
+        public void OnAlgoOrAssetSendClick(object sender, RoutedEventArgs e)
+        {
+            var sendingStatus = this.FindControl<TextBlock>("tb_sendingStatus");
+            sendingStatus.IsVisible = true;
+            var sendToAddress = this.FindControl<TextBox>("tb_sendToAddress");
+            var sendToAmount = this.FindControl<TextBox>("tb_sendToAmount");
+            var sendToStringMessage = this.FindControl<TextBox>("tb_sendToMessage").Text ?? "";
+            ulong sendToIntAmount;
+            if (!Address.IsValid(sendToAddress.Text))
+            {
+                MessageBoxManager.GetMessageBoxStandardWindow("Address No Valid",
+                    "The address is not valid, please enter a valid address.").ShowDialog(this);
+                sendToAddress.Focus();
+                sendingStatus.IsVisible = false;
+                return;
+            }
+            if(sendToAmount.Text is null || sendToAmount.Text == "")
+            {
+                MessageBoxManager.GetMessageBoxStandardWindow("Please Enter Amount",
+                    "The amount can not be empty, please enter a right number.").ShowDialog(this);
+                sendToAmount.Focus();
+                sendingStatus.IsVisible = false;
+                return;
+            }
+            try
+            {
+                sendToIntAmount = Convert.ToUInt64(sendToAmount.Text);
+            }
+            catch
+            {
+                MessageBoxManager.GetMessageBoxStandardWindow("Amount Error",
+                    "The amount should be a unsigned int, please enter a right number.").ShowDialog(this);
+                sendToAmount.Focus();
+                sendingStatus.IsVisible = false;
+                return;
+            }
+            Algorand.Algod.Client.Model.TransactionParams transParams = null;
+            try
+            {
+                transParams = algoInstance.TransactionParams();
+            }
+            catch (ApiException apiex)
+            {
+                MessageBoxManager.GetMessageBoxStandardWindow("Could not get params",
+                    "Could not get params with exception:" + apiex.Message + ". Please try again later.").ShowDialog(this);
+                //throw new Exception("Could not get params", e);
+                sendingStatus.IsVisible = false;
+                return;
+            }
+            if (selectedAssetId == 0)//send algos
+            {                
+                var amount = Utils.AlgosToMicroalgos(sendToIntAmount);
+                var tx = Utils.GetPaymentTransaction(algoAccount.Address, new Address(sendToAddress.Text.Trim()), 
+                    amount, sendToStringMessage, transParams);
+
+                // send the transaction to the network
+                try
+                {
+                    var signedTx = algoAccount.SignTransaction(tx);
+                    var id = Utils.SubmitTransaction(algoInstance, signedTx);
+                    //Console.WriteLine("Successfully sent tx with id: " + id.TxId);
+                }
+                catch (ApiException apiex)
+                {
+                    // This is generally expected, but should give us an informative error message.
+                    MessageBoxManager.GetMessageBoxStandardWindow("Exception",
+                        "Exception when sending:" + apiex.Message).ShowDialog(this);
+                    //throw new Exception("Could not get params", e);
+                    sendingStatus.IsVisible = false;
+                    return;
+                }
+            }else //send ASA
+            {
+                var tx = Utils.GetTransferAssetTransaction(algoAccount.Address, new Address(sendToAddress.Text.Trim()), 
+                    selectedAssetId, sendToIntAmount, transParams, null, sendToStringMessage);
+                var signedTx = algoAccount.SignTransaction(tx);
+
+                try
+                {
+                    var id = Utils.SubmitTransaction(algoInstance, signedTx);
+                    //Console.WriteLine("Transaction ID: " + id.TxId);
+                    //Console.WriteLine(Utils.WaitTransactionToComplete(algoInstance, id.TxId));
+                    // We can now list the account information for acct3 
+                    // and see that it now has 5 of the new asset
+                    //act = algodApiInstance.AccountInformation(acct3.Address.ToString());
+                    //Console.WriteLine(act.GetHolding(assetID).Amount);
+                }
+                catch (Exception apiex)
+                {
+                    //e.printStackTrace();
+                    MessageBoxManager.GetMessageBoxStandardWindow("Exception",
+                        "Exception when sending:" + apiex.Message).ShowDialog(this);
+                    //throw new Exception("Could not get params", e);
+                    sendingStatus.IsVisible = false;
+                    return;
+                }
+            }
+            sendingStatus.Text = "Send Success!";
         }
         public void OnNewWalletStep2Cancel(object sender, RoutedEventArgs e)
         {
@@ -658,7 +893,11 @@ namespace AlgoWallet.Views
             }
             var metadatahash = this.FindControl<TextBox>("tb_metadatahash").Text;
             var metadataerror = true;
-            if (metadatahash.Length > 0)
+            if(metadatahash is null || metadatahash.Length == 0)
+            {
+                metadatahash = Utils.GetRandomAssetMetaHash();
+                metadataerror = false;
+            }else //if (metadatahash.Length > 0)
             {
                 var metabytes = Encoding.UTF8.GetBytes(metadatahash);
                 if (metabytes.Length == 32)
@@ -666,7 +905,7 @@ namespace AlgoWallet.Views
                     metadatahash = Convert.ToBase64String(metabytes);
                     metadataerror = false;
                 }
-                else if(metadatahash.Length != "MTIzNDU2Nzg5MDEyMzQ1NjczNDUxMjM0NTY3ODkwNDU=".Length && metadatahash.EndsWith('='))
+                else if(metadatahash.Length != 44 && metadatahash.EndsWith('='))
                 {
                     try
                     {
@@ -716,6 +955,9 @@ namespace AlgoWallet.Views
                 var pair = new KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>(selectedAssetId, ap);
                 accountAssets.Add(pair);
                 UpdateAssetsList(pair);
+                createAsset.IsVisible = false;
+                sideBar.IsVisible = true;
+                walletOperationTabControl.IsVisible = true;
             }
             catch (Exception)
             {
