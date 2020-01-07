@@ -386,18 +386,26 @@ namespace AlgoWallet.Views
         }
         private void UpdateAssetsList(object state)
         {
-            if(state is object[] objectList)
+            //state is List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>
+            object[] objectList = null;
+
+            if (state is object[])
             {
-                if(objectList[0] is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair && objectList[1] is ulong amount)
+                objectList = state as object[];
+            }
+            else if(state is List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>)
+            {
+                objectList = (state as List<object>).ToArray();
+            }
+            if (objectList[0] is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair && objectList[1] is ulong amount)
+            {
+                Button btn = new Button()
                 {
-                    Button btn = new Button()
-                    {
-                        Content = string.Format("{0}({1})", pair.Value.Assetname, amount), 
-                        Name = "btn_" + pair.Key.ToString()
-                    };
-                    btn.Click += OnAssetClick;
-                    assetsListPanel.Children.Add(btn);
-                }
+                    Content = string.Format("{0}({1})", pair.Value.Assetname, amount),
+                    Name = "btn_" + pair.Key.ToString()
+                };
+                btn.Click += OnAssetClick;
+                assetsListPanel.Children.Add(btn);
             }
             //if (state is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair)
             //{
@@ -774,7 +782,9 @@ namespace AlgoWallet.Views
             foreach (var item in mnemonicBoxes)
             {
                 //var box = this.FindControl<TextBox>(item);
-                var boxContent = item.Value.Text.Trim();
+                var boxContent = item.Value.Text;
+                if(!(boxContent is null))
+                    boxContent = boxContent.Trim();
                 var index = item.Key;
                 if (boxContent != mnemonic[index])
                 {
@@ -1003,10 +1013,30 @@ namespace AlgoWallet.Views
             }
             var frozen = this.FindControl<CheckBox>("cb_assetFrozen").IsChecked;
             var url = this.FindControl<TextBox>("tb_assetUrl").Text;
-            var managerAddress = this.FindControl<TextBox>("tb_assetManager").Text;
-            var reserverAddress = this.FindControl<TextBox>("tb_assetReserver").Text;
-            var clawbackerAddress = this.FindControl<TextBox>("tb_assetClawbacker").Text;
+            url ??= "";            
+            var managerAddress = this.FindControl<TextBox>("tb_assetManager").Text;            
+            var reserverAddress = this.FindControl<TextBox>("tb_assetReserver").Text;            
+            var clawbackerAddress = this.FindControl<TextBox>("tb_assetClawbacker").Text;            
             var freezerAddress = this.FindControl<TextBox>("tb_assetFreezer").Text;
+
+            //if (managerAddress is null ||
+            //    reserverAddress is null ||
+            //    clawbackerAddress is null ||
+            //    freezerAddress is null)
+            //{
+            //    var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            //    {
+            //        ButtonDefinitions = ButtonEnum.Ok,
+            //        ContentTitle = "Default Address",
+            //        ContentMessage = "If you leave the Manager Address, Reserve Address, Clawbacke Address or Freeze Address to blank, current user account address will be used."
+            //    });
+            //    msBoxStandardWindow.ShowDialog(this);
+            //    //this.FindControl<TextBox>("tb_metadatahash").Focus();
+            //}
+            managerAddress ??= algoAccount.Address.ToString();
+            reserverAddress ??= algoAccount.Address.ToString();
+            clawbackerAddress ??= algoAccount.Address.ToString();
+            freezerAddress ??= algoAccount.Address.ToString();
             var ap = new Algorand.Algod.Client.Model.AssetParams(creator: algoAccount.Address.ToString(), assetname: name,
                 unitname: unitName, defaultfrozen: frozen, total: total,
                 url: url, managerkey: managerAddress, reserveaddr: reserverAddress, clawbackaddr: clawbackerAddress,
@@ -1024,11 +1054,15 @@ namespace AlgoWallet.Views
             try
             {
                 var id = Utils.SubmitTransaction(algoInstance, signedTx);
-                Algorand.Algod.Client.Model.Transaction ptx = algoInstance.PendingTransactionInformation(id.TxId);
+                Utils.WaitTransactionToComplete(algoInstance, id.TxId);
+                var ptx = algoInstance.PendingTransactionInformation(id.TxId);
+                //var ptx = algoInstance.Transaction(id.TxId);
                 selectedAssetId = (ulong)ptx.Txresults.Createdasset;
                 var pair = new KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>(selectedAssetId, ap);
                 accountAssets.Add(pair);
-                UpdateAssetsList(pair);
+                UpdateAssetsList(accountAssets);
+                //clear all the text
+
                 createAsset.IsVisible = false;
                 sideBar.IsVisible = true;
                 walletOperationTabControl.IsVisible = true;
