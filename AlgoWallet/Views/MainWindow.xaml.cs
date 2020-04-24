@@ -9,6 +9,7 @@ using Config.Net;
 using MessageBox.Avalonia;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
+using NLog;
 using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace AlgoWallet.Views
 {
     public class MainWindow : Window
     {
+        private static readonly ILogger logger = LogManager.GetLogger("Logger");
         int sleepTime = 5000;
         StackPanel walletManagePanel = null;
         TabControl walletOperationTabControl = null;
@@ -53,7 +55,10 @@ namespace AlgoWallet.Views
 
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            //logger.Debug("debug");
+            //logger.Error("error");
+            //logger.Info("Info");
             settings = new ConfigurationBuilder<IAppSettings>()
                 .UseJsonFile("config.db")
                 .Build();
@@ -77,20 +82,18 @@ namespace AlgoWallet.Views
                 try
                 {
                     var status = algoInstance.GetStatus();
+                    logger.Info(string.Format("connect to {0} success.", settings.AlogApiAddress));
                 }
                 catch (Exception)
-                {
-                    this.FindControl<TextBox>("tb_apiUrl").Text = settings.AlogApiAddress;
-                    this.FindControl<TextBox>("tb_apiToken").Text = settings.AlgoApiToken;
+                {                    
                     connected = false;
+                    logger.Info(string.Format("connect to {0} failed.", settings.AlogApiAddress));
                 }
             }
             else connected = false;
             if (!connected)
             {
-                initApiInfo.IsVisible = true;
-                walletOperationTabControl.IsVisible = false;
-                sideBar.IsVisible = false;
+                ShowConfigAccessPoint();
             }
             else
             {
@@ -102,6 +105,17 @@ namespace AlgoWallet.Views
             //};
             //this.FindControl<StackPanel>("sp_transInfos").Children.Add(info);
         }
+
+        private void ShowConfigAccessPoint()
+        {
+            this.FindControl<TextBox>("tb_apiUrl").Text = settings.AlogApiAddress;
+            this.FindControl<TextBox>("tb_apiToken").Text = settings.AlgoApiToken;
+            enterPassword.IsVisible = false;
+            initApiInfo.IsVisible = true;
+            walletOperationTabControl.IsVisible = false;
+            sideBar.IsVisible = false;
+        }
+
         public void OnChangeWalletClick(object sender, RoutedEventArgs e)
         {
             CheckAccount();
@@ -146,23 +160,26 @@ namespace AlgoWallet.Views
             {
                 var msg = message as string[];                
                 m_SyncContext.Post(UpdateTestResult, "Connecting...");
+                var url = "";
+                if (msg[0].IndexOf("//") == -1)
+                    url = "http://" + msg[0];
+                else
+                    url = msg[0];
                 try
-                {
-                    var url = "";
-                    if (msg[0].IndexOf("//") == -1)
-                        url = "http://" + msg[0];
-                    else
-                        url = msg[0];
+                {                    
                     var api = new AlgodApi(url, msg[1], 10 * 1000);
                     var supply = api.GetSupply();
                     if (supply != null && supply.TotalMoney > 0)
                     {
                         m_SyncContext.Post(UpdateTestResult, "Test Success!");
+                        logger.Info(string.Format("Test connection {0} success!", url));
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    m_SyncContext.Post(UpdateTestResult, "Test Failed!");
+                    m_SyncContext.Post(UpdateTestResult, "Test Failed! Please check Logs folder for more details.");
+                    logger.Error(string.Format("Test connection {0} failed. Error message: {1}",
+                        url, ex.Message));
                 }
             }
             
@@ -1085,6 +1102,10 @@ namespace AlgoWallet.Views
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
             createAsset.IsVisible = false;
+        }
+        private void OnResetAccessPoint(object sender, RoutedEventArgs e)
+        {
+            ShowConfigAccessPoint();
         }
     }
 }

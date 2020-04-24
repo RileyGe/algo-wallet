@@ -66,6 +66,10 @@
       <Setter Property="FontWeight" Value="Bold"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
     </Style>
+    <Style Selector="Button.h1">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
     <Style Selector="TextBlock.h2">
       <Setter Property="FontSize" Value="18"/>
       <Setter Property="FontWeight" Value="Bold"/>
@@ -520,9 +524,9 @@
       <StackPanel Orientation="Horizontal" Margin="0 40 0 0">
         <Button Classes="btn" Click="OnCloseWindow">Close</Button>
         <Button Classes="btn" Click="OnPasswordEntered">OK</Button>
-      </StackPanel>
-      <TextBlock Classes="h1" Margin="0 40 0 0">Create/Import New Account</TextBlock>
-      <Button Margin="50 30" Click="OnWalletClick">Create/Import New Account</Button>
+      </StackPanel>      
+      <Button Margin="50 30" Click="OnWalletClick" Classes="h1">Create/Import New Account</Button>
+      <Button Margin="50 10" Click="OnResetAccessPoint" Classes="h1">Reset Access Point</Button>
     </StackPanel>
   </StackPanel>
 </Window>
