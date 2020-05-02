@@ -44,6 +44,10 @@
       <Setter Property="Padding" Value="0"/>
       <Setter Property="Height" Value="20"/>
     </Style>
+    <Style Selector="Button.link">
+      <Setter Property="Foreground" Value="#3399EA"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
     <Style Selector="StackPanel.line">
       <Setter Property="Margin" Value="0 5"/>
     </Style>
@@ -163,9 +167,10 @@
       <ScrollViewer MaxWidth="350">
         <StackPanel Name="sp_assetsList" Orientation="Vertical" MaxHeight="350">          
         </StackPanel>
-      </ScrollViewer>       
-      <Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>
-      <Button Name="btn_changeWallet" Click="OnChangeWalletClick">Change Wallet</Button>
+      </ScrollViewer>
+      <!--<Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>
+      -->      
+      <Button Name="btn_changeWallet" Click="OnChangeWalletClick">Back To Home</Button>
       <Button Name="btn_settings">Settings</Button>
     </StackPanel>
     <TabControl Name="tc_walletOperation" Width="540">
@@ -256,7 +261,8 @@
             <Button  Margin="5 10 5 20">Recover Wallet</Button>
           </StackPanel>
         </Border>        
-      </StackPanel>      
+      </StackPanel>
+      <Button HorizontalAlignment="Right" Classes="link" Click="OnBackToHomeClicked">Back to Home</Button>
     </StackPanel>
     <StackPanel Orientation="Vertical" Name="sp_newWallet_step1" 
                 IsVisible="False" HorizontalAlignment="Center">
@@ -353,7 +359,7 @@
       </Border>
           
       <StackPanel Orientation="Horizontal">
-        <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Cancel" Click="OnNewWalletStep1Cancel">Cancel</Button>
+        <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Cancel" Click="OnNewWalletCancel">Cancel</Button>
         <Button Classes="btn" Margin="50 30" Name="btn_newWalletStep1Next" Click="OnNewWalletStep1ContinueClick">Continue</Button>
       </StackPanel>
     </StackPanel>
@@ -457,7 +463,7 @@
                  Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
       </StackPanel>
       <StackPanel Orientation="Horizontal">
-        <Button Classes="btn" Click="OnNewWalletStep2Cancel">Cancel</Button>
+        <Button Classes="btn" Click="OnNewWalletCancel">Cancel</Button>
         <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>
       </StackPanel>      
     </StackPanel>

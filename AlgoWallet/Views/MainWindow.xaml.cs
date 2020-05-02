@@ -122,6 +122,8 @@ namespace AlgoWallet.Views
         }
         private void CheckAccount()
         {
+            //sp_walletManage
+            walletManagePanel.IsVisible = false;
             if (settings.Accounts is null || settings.Accounts.Length < 1)
             {
                 sideBar.IsVisible = false;
@@ -645,6 +647,7 @@ namespace AlgoWallet.Views
                 for(int j = 0; j < 5; j++)
                 {
                     var item = (verifyMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
+                    item.Children.Clear();
                     var pos = i * 5 + j;
                     if (needVerifyPositions.Contains(pos))
                     {
@@ -665,12 +668,23 @@ namespace AlgoWallet.Views
             newWalletStep1.IsVisible = false;
             newWalletStep2.IsVisible = true;
         }
-        public void OnNewWalletStep1Cancel(object sender, RoutedEventArgs e)
+        public void OnNewWalletCancel(object sender, RoutedEventArgs e)
         {
-            newWalletStep1.IsVisible = false;
-            sideBar.IsVisible = true;
-            walletOperationTabControl.IsVisible = true;
+            if(newWalletStep1 != null)
+                newWalletStep1.IsVisible = false;
+            if(newWalletStep2 != null)
+                newWalletStep2.IsVisible = false;
+            //sideBar.IsVisible = true;
+            //walletOperationTabControl.IsVisible = true;
+            CheckAccount();
+
         }
+        //public void OnNewWalletStep2Cancel(object sender, RoutedEventArgs e)
+        //{
+        //    newWalletStep2.IsVisible = false;
+        //    sideBar.IsVisible = true;
+        //    walletOperationTabControl.IsVisible = true;
+        //}
         public void OnAlgoOrAssetSendClick(object sender, RoutedEventArgs e)
         {
             var sendingStatus = this.FindControl<TextBlock>("tb_sendingStatus");
@@ -770,12 +784,7 @@ namespace AlgoWallet.Views
             }
             sendingStatus.Text = "Send Success!";
         }
-        public void OnNewWalletStep2Cancel(object sender, RoutedEventArgs e)
-        {
-            newWalletStep2.IsVisible = false;
-            sideBar.IsVisible = true;
-            walletOperationTabControl.IsVisible = true;
-        }
+        
         private void Box_DataContextChanged(object sender, EventArgs e)
         {
             //throw new NotImplementedException();
@@ -1106,6 +1115,10 @@ namespace AlgoWallet.Views
         private void OnResetAccessPoint(object sender, RoutedEventArgs e)
         {
             ShowConfigAccessPoint();
+        }
+        private void OnBackToHomeClicked(object sender, RoutedEventArgs e)
+        {
+            CheckAccount();
         }
     }
 }
