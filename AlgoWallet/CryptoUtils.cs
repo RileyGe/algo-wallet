@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Security;
 using System.Text;
 
 namespace AlgoWallet
@@ -19,7 +20,8 @@ namespace AlgoWallet
         {
             var passwordCharArray = pwd.ToCharArray();
             var salt = new byte[16];
-            new Random().NextBytes(salt);
+            new SecureRandom().NextBytes(salt);
+            //new Random().NextBytes(salt);
             return OpenBsdBCrypt.Generate(passwordCharArray, salt, 12);
         }
         /// <summary>

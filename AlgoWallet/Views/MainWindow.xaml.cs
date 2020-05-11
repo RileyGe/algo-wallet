@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Org.BouncyCastle.Security;
 
 namespace AlgoWallet.Views
 {
@@ -631,7 +632,7 @@ namespace AlgoWallet.Views
             //TabItem settingItem = get            
             newWalletStep2 ??= this.FindControl<StackPanel>("sp_newWallet_step2");
             verifyMnemonic ??= this.FindControl<StackPanel>("sp_verifyMnemonic");
-            Random rd = new Random();
+            SecureRandom rd = new SecureRandom();
             List<int> needVerifyPositions = new List<int>();
             while (true)
             {
