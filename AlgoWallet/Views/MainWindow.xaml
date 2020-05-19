@@ -264,6 +264,20 @@
       </StackPanel>
       <Button HorizontalAlignment="Right" Classes="link" Click="OnBackToHomeClicked">Back to Home</Button>
     </StackPanel>
+    <StackPanel Name="sp_newWallet_step0" IsVisible="False">
+      <TextBlock Classes="h1">New Wallet</TextBlock>
+      <TextBlock HorizontalAlignment="Left" Margin="0 10">1. Wallet Name</TextBlock>
+      <TextBox Width="550" HorizontalAlignment="Left" Name="tb_walletName"></TextBox>
+      <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 5 0 15">
+        <TextBlock HorizontalAlignment="Left" Margin="0 10" Width="150">2. Choose a Password:</TextBlock>
+        <TextBox Width="400" FontSize="16" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center"
+                 Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
+      </StackPanel>
+      <StackPanel Orientation="Horizontal">
+        <Button Classes="btn" Click="OnNewWalletCancel">Cancel</Button>
+        <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletStep0" Name="btn_newWalletStep0Next">Continue</Button>
+      </StackPanel>
+    </StackPanel>
     <StackPanel Orientation="Vertical" Name="sp_newWallet_step1" 
                 IsVisible="False" HorizontalAlignment="Center">
       <TextBlock Classes="h1" Margin="0 30 0 20">New Wallet</TextBlock>
@@ -365,8 +379,6 @@
     </StackPanel>
     <StackPanel Name="sp_newWallet_step2" IsVisible="False">
       <TextBlock Classes="h1">New Wallet</TextBlock>
-      <TextBlock HorizontalAlignment="Left" Margin="0 10">1. Wallet name</TextBlock>
-      <TextBox Width="550" HorizontalAlignment="Left" Name="tb_walletName"></TextBox>
       <TextBlock Margin="0 10 0 5">2. Please enter and fill out the empty boxes below to verify your mnemonic phrase key</TextBlock>
       <Border Classes="walletborder">
         <StackPanel Orientation="Vertical" Name="sp_verifyMnemonic" Classes="mnemonic">
@@ -457,11 +469,6 @@
           </StackPanel>
         </StackPanel>
       </Border>
-      <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 5 0 15">
-        <TextBlock HorizontalAlignment="Left" Margin="0 10" Width="150">3. Choose a password:</TextBlock>
-        <TextBox Width="400" FontSize="16" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center" 
-                 Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
-      </StackPanel>
       <StackPanel Orientation="Horizontal">
         <Button Classes="btn" Click="OnNewWalletCancel">Cancel</Button>
         <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>

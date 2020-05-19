@@ -26,6 +26,7 @@ namespace AlgoWallet.Views
         int sleepTime = 5000;
         StackPanel walletManagePanel = null;
         TabControl walletOperationTabControl = null;
+        StackPanel newWalletStep0 = null;
         StackPanel newWalletStep1 = null;
         StackPanel newWalletStep2 = null;
         StackPanel verifyMnemonic = null;
@@ -51,7 +52,10 @@ namespace AlgoWallet.Views
             new List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>();
         List<TransInfo> transList = new List<TransInfo>();
         ulong selectedAssetId = 0;
-        private string accountPassword = "";
+        //private string accountPassword = "";
+        private string walletName = "";
+        private byte[] salt = null;
+        private byte[] checkSalt = null;
         //ulong accountLastRound; //record the last round of the algoAccount
 
         public MainWindow()
@@ -499,32 +503,53 @@ namespace AlgoWallet.Views
             var index = new List<string>(settings.Accounts).IndexOf(walletName);
             var passwordTextBox = this.FindControl<TextBox>("tb_enterPassword");
             var enteredPassword = passwordTextBox.Text.Trim();
-            if(OpenBsdBCrypt.CheckPassword(settings.Passwords[index],
-                enteredPassword.ToCharArray()))
+            salt = Convert.FromBase64String(settings.Salt[index]);
+            checkSalt = Convert.FromBase64String(settings.CheckSalt[index]);
+            var key = CryptoUtils.GenerateHash(salt, enteredPassword);
+            for(int i = 0; i < checkSalt.Length; i++)
             {
-                accountPassword = enteredPassword;
-                var seed = CryptoUtils.DecryptAES(accountPassword, settings.Mnemonics[index]);
-                algoAccount = new Account(seed);
-                sideBar.IsVisible = true;
-                walletOperationTabControl.IsVisible = true;
-                enterPassword.IsVisible = false;
-                passwordTextBox.Text = "";
-                ChangeWalletRefresh();
-                //this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
-                //new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
-            }
-            else
-            {
-                var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                if(checkSalt[i] != key[i])
                 {
-                    ButtonDefinitions = ButtonEnum.Ok,
-                    ContentTitle = "Password Not Right",
-                    ContentMessage = "The wallet name and password not match, please try again."
-                });
-                msBoxStandardWindow.ShowDialog(this);
-                passwordTextBox.Text = "";
-                passwordTextBox.Focus();
+                    var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                    {
+                        ButtonDefinitions = ButtonEnum.Ok,
+                        ContentTitle = "Password Not Right",
+                        ContentMessage = "The wallet name and password not match, please try again."
+                    });
+                    msBoxStandardWindow.ShowDialog(this);
+                    passwordTextBox.Text = "";
+                    passwordTextBox.Focus();
+                    return;
+                }
             }
+            algoAccount = new Account(CryptoUtils.GetMasterKey(key));
+            sideBar.IsVisible = true;
+            walletOperationTabControl.IsVisible = true;
+            enterPassword.IsVisible = false;
+            passwordTextBox.Text = "";
+            ChangeWalletRefresh();
+            //if (OpenBsdBCrypt.CheckPassword(settings.Passwords[index],
+            //    enteredPassword.ToCharArray()))
+            //{
+            //    var accountPassword = enteredPassword;
+            //    var seed = CryptoUtils.DecryptAES(accountPassword, settings.Mnemonics[index]);
+            //    algoAccount = new Account(seed);
+                
+            //    //this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
+            //    //new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
+            //}
+            //else
+            //{
+            //    var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            //    {
+            //        ButtonDefinitions = ButtonEnum.Ok,
+            //        ContentTitle = "Password Not Right",
+            //        ContentMessage = "The wallet name and password not match, please try again."
+            //    });
+            //    msBoxStandardWindow.ShowDialog(this);
+            //    passwordTextBox.Text = "";
+            //    passwordTextBox.Focus();
+            //}
         }
         public void OnSaveApiClicked(object sender, RoutedEventArgs e)
         {            
@@ -604,29 +629,161 @@ namespace AlgoWallet.Views
         public void OnNewWalletClick(object sender, RoutedEventArgs e)
         {
             //TabItem settingItem = get            
+            newWalletStep0 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
+            //algoAccount = new Account();
+            //mnemonic.Clear();
+            //mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
+            //showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    for (int j = 0; j < 5; j++)
+            //    {
+            //        var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
+            //        if(item.Children.Count > 1)
+            //        {
+            //            item.Children.RemoveAt(1);
+            //        }
+            //        Border bd = new Border() { Classes = new Classes("oneword") };
+            //        bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
+            //        item.Children.Add(bd);     
+                    
+            //    }
+            //}
+            newWalletStep0.IsVisible = true;
+            walletManagePanel.IsVisible = false;
+        }
+        public void OnCreateWalletStep0(object sender, RoutedEventArgs e)
+        {
             newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step1");
-            algoAccount = new Account();
+            var walletNameBox = this.FindControl<TextBox>("tb_walletName");
+            walletName = walletNameBox.Text;
+            if (walletName is null || walletName.Length < 1)
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Wallet Name Error",
+                    ContentMessage = "Please Enter the Wallet Name!"
+                });
+                msgBox.ShowDialog(this);
+                walletNameBox.Focus();
+                return;
+            }
+            //foreach (var item in mnemonicBoxes)
+            //{
+            //    //var box = this.FindControl<TextBox>(item);
+            //    var boxContent = item.Value.Text;
+            //    if (!(boxContent is null))
+            //        boxContent = boxContent.Trim();
+            //    var index = item.Key;
+            //    if (boxContent != mnemonic[index])
+            //    {
+            //        var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            //        {
+            //            ButtonDefinitions = ButtonEnum.Ok,
+            //            ContentTitle = "Mnemonic Error",
+            //            ContentMessage = "Please Enter the Right Mnemonic Phrase!"
+            //        });
+            //        msgBox.ShowDialog(this);
+            //        item.Value.Focus();
+            //        return;
+            //    }
+            //}
+            var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
+            var accountPassword = walletPassword.Text;
+            if (accountPassword is null || accountPassword.Length < 1)
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Wallet Password Error",
+                    ContentMessage = "Please Enter the Password!"
+                });
+                msgBox.ShowDialog(this);
+                walletPassword.Focus();
+                return;
+            }
+            //accountPassword = password;
+            salt = CryptoUtils.GenerateRandomSalt();
+            //if (settings.Accounts == null || settings.Accounts.Length < 1)
+            //{
+            //    settings.Accounts = new string[] {
+            //        this.FindControl<TextBox>("tb_walletName").Text.Trim()
+            //    };
+            //}
+            //else
+            //{
+            //    var accountList = new List<string>{
+            //        this.FindControl<TextBox>("tb_walletName").Text.Trim() };
+            //    accountList.AddRange(settings.Accounts);
+            //    settings.Accounts = accountList.ToArray();
+            //}
+            //if (settings.Passwords == null || settings.Passwords.Length < 1)
+            //{
+            //    settings.Passwords = new string[] {
+            //        CryptoUtils.GenerateBcryptHash(accountPassword)
+            //    };
+            //}
+            //else
+            //{
+            //    var psdList = new List<string>
+            //    {
+            //        CryptoUtils.GenerateBcryptHash(accountPassword)
+            //    };
+            //    psdList.AddRange(settings.Passwords);
+            //    settings.Passwords = psdList.ToArray();
+            //}
+            //var mnemonicString = GetMnemonicString(mnemonic);
+            //algoAccount = new Account(mnemonicString);
+            //var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
+            //if (settings.Mnemonics == null || settings.Mnemonics.Length < 1)
+            //{
+            //    settings.Mnemonics = new string[] {
+            //        encryptedMasterKey
+            //    };
+            //}
+            //else
+            //{
+            //    var keyList = new List<string>
+            //    {
+            //        encryptedMasterKey
+            //    };
+            //    keyList.AddRange(settings.Mnemonics);
+            //    settings.Mnemonics = keyList.ToArray();
+            //}
+            //newWalletStep2.IsVisible = false;
+            //walletOperationTabControl.IsVisible = true;
+            //sideBar.IsVisible = true;
+            //ChangeWalletRefresh();
+            var key = CryptoUtils.GenerateHash(salt, accountPassword);
+            checkSalt = CryptoUtils.GetCheckSalt(key);
+            var masterKey = CryptoUtils.GetMasterKey(key);
+            //var mnemonicString = GetMnemonicString(mnemonic);
+            algoAccount = new Account(masterKey);
+            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
+            //algoAccount = new Account();
             mnemonic.Clear();
-            mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
+            mnemonic.AddRange(Mnemonic.FromKey(masterKey).Split(' '));
             showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
             for (int i = 0; i < 5; i++)
             {
                 for (int j = 0; j < 5; j++)
                 {
                     var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
-                    if(item.Children.Count > 1)
+                    if (item.Children.Count > 1)
                     {
                         item.Children.RemoveAt(1);
                     }
                     Border bd = new Border() { Classes = new Classes("oneword") };
                     bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
-                    item.Children.Add(bd);     
-                    
+                    item.Children.Add(bd);
+
                 }
             }
             newWalletStep1.IsVisible = true;
-            walletManagePanel.IsVisible = false;
-        }  
+            newWalletStep0.IsVisible = false;
+            //walletManagePanel.IsVisible = false;
+        }
         public void OnNewWalletStep1ContinueClick(object sender, RoutedEventArgs e)
         {
             //TabItem settingItem = get            
@@ -668,6 +825,107 @@ namespace AlgoWallet.Views
             }            
             newWalletStep1.IsVisible = false;
             newWalletStep2.IsVisible = true;
+        }
+        private void OnCreateWalletFinishClicked(object sender, RoutedEventArgs e)
+        {
+            //var walletNameBox = this.FindControl<TextBox>("tb_walletName");
+            //var walletName = walletNameBox.Text;
+            //if (walletName is null || walletName.Length < 1)
+            //{
+            //    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            //    {
+            //        ButtonDefinitions = ButtonEnum.Ok,
+            //        ContentTitle = "Wallet Name Error",
+            //        ContentMessage = "Please Enter the Wallet Name!"
+            //    });
+            //    msgBox.ShowDialog(this);
+            //    walletNameBox.Focus();
+            //    return;
+            //}
+            foreach (var item in mnemonicBoxes)
+            {
+                //var box = this.FindControl<TextBox>(item);
+                var boxContent = item.Value.Text;
+                if (!(boxContent is null))
+                    boxContent = boxContent.Trim();
+                var index = item.Key;
+                if (boxContent != mnemonic[index])
+                {
+                    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                    {
+                        ButtonDefinitions = ButtonEnum.Ok,
+                        ContentTitle = "Mnemonic Error",
+                        ContentMessage = "Please Enter the Right Mnemonic Phrase!"
+                    });
+                    msgBox.ShowDialog(this);
+                    item.Value.Focus();
+                    return;
+                }
+            }
+            //var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
+            //var password = walletPassword.Text;
+            //if (password is null || password.Length < 1)
+            //{
+            //    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+            //    {
+            //        ButtonDefinitions = ButtonEnum.Ok,
+            //        ContentTitle = "Wallet Password Error",
+            //        ContentMessage = "Please Enter the Password!"
+            //    });
+            //    msgBox.ShowDialog(this);
+            //    walletPassword.Focus();
+            //    return;
+            //}
+            //var accountPassword = password;
+            if (settings.Accounts == null || settings.Accounts.Length < 1)
+            {
+                settings.Accounts = new string[] { walletName };
+            }
+            else
+            {
+                var accountList = new List<string> { walletName };
+                accountList.AddRange(settings.Accounts);
+                settings.Accounts = accountList.ToArray();
+            }
+
+            if (settings.Salt == null || settings.Salt.Length < 1)
+            {
+                settings.Salt = new string[] {
+                    //CryptoUtils.EncryptAES(accountPassword)
+                    Convert.ToBase64String(salt)
+                };
+            }
+            else
+            {
+                var psdList = new List<string>
+                {
+                    Convert.ToBase64String(salt)
+                };
+                psdList.AddRange(settings.Salt);
+                settings.Salt = psdList.ToArray();
+            }
+            //var mnemonicString = GetMnemonicString(mnemonic);
+            //algoAccount = new Account(mnemonicString);
+            //var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
+            if (settings.CheckSalt == null || settings.CheckSalt.Length < 1)
+            {
+                settings.CheckSalt = new string[] {
+                    Convert.ToBase64String(checkSalt)
+                };
+            }
+            else
+            {
+                var keyList = new List<string>
+                {
+                    Convert.ToBase64String(checkSalt)
+                };
+                keyList.AddRange(settings.CheckSalt);
+                settings.CheckSalt = keyList.ToArray();
+            }
+            newWalletStep2.IsVisible = false;
+            walletOperationTabControl.IsVisible = true;
+            sideBar.IsVisible = true;
+            ChangeWalletRefresh();
         }
         public void OnNewWalletCancel(object sender, RoutedEventArgs e)
         {
@@ -789,110 +1047,7 @@ namespace AlgoWallet.Views
         private void Box_DataContextChanged(object sender, EventArgs e)
         {
             //throw new NotImplementedException();
-        }        
-        private void OnCreateWalletFinishClicked(object sender, RoutedEventArgs e)
-        {
-            var walletNameBox = this.FindControl<TextBox>("tb_walletName");
-            var walletName = walletNameBox.Text;
-            if (walletName is null || walletName.Length < 1)
-            {
-                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-                {
-                    ButtonDefinitions = ButtonEnum.Ok,
-                    ContentTitle = "Wallet Name Error",
-                    ContentMessage = "Please Enter the Wallet Name!"
-                });
-                msgBox.ShowDialog(this);
-                walletNameBox.Focus();
-                return;
-            }
-            foreach (var item in mnemonicBoxes)
-            {
-                //var box = this.FindControl<TextBox>(item);
-                var boxContent = item.Value.Text;
-                if(!(boxContent is null))
-                    boxContent = boxContent.Trim();
-                var index = item.Key;
-                if (boxContent != mnemonic[index])
-                {
-                    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-                    {
-                        ButtonDefinitions = ButtonEnum.Ok,
-                        ContentTitle = "Mnemonic Error",
-                        ContentMessage = "Please Enter the Right Mnemonic Phrase!"
-                    });
-                    msgBox.ShowDialog(this);
-                    item.Value.Focus();
-                    return;
-                }
-            }
-            var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
-            var password = walletPassword.Text;
-            if (password is null || password.Length < 1)
-            {
-                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-                {
-                    ButtonDefinitions = ButtonEnum.Ok,
-                    ContentTitle = "Wallet Password Error",
-                    ContentMessage = "Please Enter the Password!"
-                });
-                msgBox.ShowDialog(this);
-                walletPassword.Focus();
-                return;
-            }
-            accountPassword = password;
-            if (settings.Accounts == null || settings.Accounts.Length < 1)
-            {
-                settings.Accounts = new string[] {
-                    this.FindControl<TextBox>("tb_walletName").Text.Trim()
-                };
-            }
-            else
-            {
-                var accountList = new List<string>{
-                    this.FindControl<TextBox>("tb_walletName").Text.Trim() };
-                accountList.AddRange(settings.Accounts);
-                settings.Accounts = accountList.ToArray();
-            }
-            if (settings.Passwords == null || settings.Passwords.Length < 1)
-            {
-                settings.Passwords = new string[] {
-                    CryptoUtils.GenerateBcryptHash(accountPassword)
-                };
-            }
-            else
-            {
-                var psdList = new List<string>
-                {
-                    CryptoUtils.GenerateBcryptHash(accountPassword)
-                };
-                psdList.AddRange(settings.Passwords);
-                settings.Passwords = psdList.ToArray();
-            }
-            var mnemonicString = GetMnemonicString(mnemonic);
-            algoAccount = new Account(mnemonicString);
-            var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
-            if (settings.Mnemonics == null || settings.Mnemonics.Length < 1)
-            {
-                settings.Mnemonics = new string[] {
-                    encryptedMasterKey
-                };
-            }
-            else
-            {
-                var keyList = new List<string>
-                {
-                    encryptedMasterKey
-                };
-                keyList.AddRange(settings.Mnemonics);
-                settings.Mnemonics = keyList.ToArray();
-            }
-            newWalletStep2.IsVisible = false;
-            walletOperationTabControl.IsVisible = true;
-            sideBar.IsVisible = true;
-            ChangeWalletRefresh();
-        }
-
+        }    
         private void ChangeWalletRefresh()
         {
             //change the wallet

@@ -11,6 +11,45 @@ namespace AlgoWallet
     public class CryptoUtils
     {
         /// <summary>
+        /// Generate a random 16 bits salt
+        /// </summary>
+        /// <returns>16 bits salt</returns>
+        public static byte[] GenerateRandomSalt()
+        {
+            var salt = new byte[16];
+            new SecureRandom().NextBytes(salt);
+            //new Random().NextBytes(salt);
+            return salt;
+        }
+        public static byte[] GenerateHash(byte[] salt, string pwd)
+        {
+            if (salt.Length != 16)
+                return null;
+
+            var password = Encoding.UTF8.GetBytes(pwd);
+            const int SCryptN = 262144;
+            // Actual SCrypt computation
+            // r=8, p=1 are default parameters
+            // dkLen=24 = output a 24-byte key
+            return SCrypt.Generate(password, salt, SCryptN, 8, 1, 48);
+        }
+        public static byte[] GetCheckSalt(byte[] key)
+        {
+            if (key.Length != 48)
+                return null;
+            var key_list = new List<byte>(key);
+            key_list.RemoveRange(16, 32);
+            return key_list.ToArray();
+        }
+        public static byte[] GetMasterKey(byte[] key)
+        {
+            if (key.Length != 48)
+                return null;
+            var key_list = new List<byte>(key);
+            key_list.RemoveRange(0, 16);
+            return key_list.ToArray();
+        }
+        /// <summary>
         /// The password is hashed with BCrypt using the format in OpenBSD 
         /// with a cost factor of 12 and a random salt
         /// </summary>
@@ -24,6 +63,7 @@ namespace AlgoWallet
             //new Random().NextBytes(salt);
             return OpenBsdBCrypt.Generate(passwordCharArray, salt, 12);
         }
+
         /// <summary>
         /// Encrypt a byte array using AES 128
         /// </summary>
