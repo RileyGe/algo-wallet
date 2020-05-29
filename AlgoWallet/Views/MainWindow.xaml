@@ -171,7 +171,7 @@
       <!--<Button Name="btn_manageWallet" Click="OnWalletClick">New/Import Wallet</Button>
       -->      
       <Button Name="btn_changeWallet" Click="OnChangeWalletClick">Back To Home</Button>
-      <Button Name="btn_settings">Settings</Button>
+      <!--<Button Name="btn_settings">Settings</Button>-->
     </StackPanel>
     <TabControl Name="tc_walletOperation" Width="540">
       <TabItem Classes="selected" Header="Infomation" Width="150" HorizontalContentAlignment="Center">
@@ -265,10 +265,10 @@
       <Button HorizontalAlignment="Right" Classes="link" Click="OnBackToHomeClicked">Back to Home</Button>
     </StackPanel>
     <StackPanel Name="sp_newWallet_step0" IsVisible="False">
-      <TextBlock Classes="h1">New Wallet</TextBlock>
-      <TextBlock HorizontalAlignment="Left" Margin="0 10">1. Wallet Name</TextBlock>
+      <TextBlock Classes="h1" Margin="0 30 0 20">New Wallet</TextBlock>
+      <TextBlock HorizontalAlignment="Left" Margin="0 10 0 20">1. Wallet Name</TextBlock>
       <TextBox Width="550" HorizontalAlignment="Left" Name="tb_walletName"></TextBox>
-      <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 5 0 15">
+      <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 20 0 50">
         <TextBlock HorizontalAlignment="Left" Margin="0 10" Width="150">2. Choose a Password:</TextBlock>
         <TextBox Width="400" FontSize="16" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center"
                  Margin="0" Padding="0" PasswordChar="*" Name="tb_walletPassword"></TextBox>
@@ -378,8 +378,8 @@
       </StackPanel>
     </StackPanel>
     <StackPanel Name="sp_newWallet_step2" IsVisible="False">
-      <TextBlock Classes="h1">New Wallet</TextBlock>
-      <TextBlock Margin="0 10 0 5">2. Please enter and fill out the empty boxes below to verify your mnemonic phrase key</TextBlock>
+        <TextBlock Classes="h1"  Margin="0 30 0 20">New Wallet</TextBlock>
+        <TextBlock Margin="0 10 0 15">Please enter and fill out the empty boxes below to verify your mnemonic phrase key</TextBlock>
       <Border Classes="walletborder">
         <StackPanel Orientation="Vertical" Name="sp_verifyMnemonic" Classes="mnemonic">
           <StackPanel>
@@ -470,8 +470,8 @@
         </StackPanel>
       </Border>
       <StackPanel Orientation="Horizontal">
-        <Button Classes="btn" Click="OnNewWalletCancel">Cancel</Button>
-        <Button Classes="btn" Margin="100 0 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>
+          <Button Classes="btn" Click="OnNewWalletCancel" Margin="50 20 50 0">Cancel</Button>
+        <Button Classes="btn" Margin="100 20 0 0" Click="OnCreateWalletFinishClicked">Create Wallet</Button>
       </StackPanel>      
     </StackPanel>
 

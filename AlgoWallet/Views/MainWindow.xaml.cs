@@ -10,13 +10,15 @@ using MessageBox.Avalonia;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
 using NLog;
-using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Org.BouncyCastle.Security;
+using System.Security.AccessControl;
+using System.IO;
+using System.Security.Principal;
 
 namespace AlgoWallet.Views
 {
@@ -64,8 +66,70 @@ namespace AlgoWallet.Views
             //logger.Debug("debug");
             //logger.Error("error");
             //logger.Info("Info");
+            var configFileName = "config.db";
+            //if (!File.Exists(configFileName))
+            //{
+
+            //    File.Create(configFileName);
+            //    //var security = new FileSecurity(configFileName,
+            //    //    AccessControlSections.Owner |
+            //    //    AccessControlSections.Group |
+            //    //    AccessControlSections.Access);
+
+            //    //var authorizationRules = security.GetAccessRules(true, true, typeof(NTAccount));
+            //    //var owner = security.GetOwner(typeof(NTAccount));
+            //    //var group = security.GetGroup(typeof(NTAccount));
+            //    //var others = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null)
+            //    //    .Translate(typeof(NTAccount));
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(owner, FileSystemRights.Modify, AccessControlType.Allow),
+            //    //    out bool modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(group, FileSystemRights.Read, AccessControlType.Deny), out modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(group, FileSystemRights.Write, AccessControlType.Deny), out modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(group, FileSystemRights.ExecuteFile, AccessControlType.Deny), out modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(others, FileSystemRights.Read, AccessControlType.Deny), out modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(others, FileSystemRights.Write, AccessControlType.Deny), out modified);
+            //    //security.ModifyAccessRule(AccessControlModification.Add,
+            //    //    new FileSystemAccessRule(others, FileSystemRights.ExecuteFile, AccessControlType.Deny), out modified);
+            //    //foreach (AuthorizationRule rule in authorizationRules)
+            //    //{
+            //    //    if (rule is FileSystemAccessRule fileRule)
+            //    //    {
+
+
+            //    //        if (owner != null && fileRule.IdentityReference == owner)
+            //    //        {
+            //    //            if (fileRule.FileSystemRights.HasFlag(FileSystemRights.ExecuteFile) ||
+            //    //               fileRule.FileSystemRights.HasFlag(FileSystemRights.ReadAndExecute) ||
+            //    //               fileRule.FileSystemRights.HasFlag(FileSystemRights.FullControl))
+            //    //            {
+            //    //                fileRule.FileSystemRights.Is
+            //    //                ownerRights.IsExecutable = true;
+            //    //            }
+            //    //        }
+            //    //        else if (group != null && fileRule.IdentityReference == group)
+            //    //        {
+            //    //            // TO BE CONTINUED...
+            //    //        }
+            //    //    }
+            //    //}
+            //    FileInfo fInfo = new FileInfo(configFileName);
+            //    FileSecurity fs = fInfo.GetAccessControl();
+            //    //FileSecurity fs = new FileSecurity();
+            //    fs.AddAccessRule(new FileSystemAccessRule(Environment.UserName,
+            //        FileSystemRights.Read, AccessControlType.Allow));
+            //    fs.AddAccessRule(new FileSystemAccessRule(Environment.UserName,
+            //        FileSystemRights.Write, AccessControlType.Allow));
+            //    var fi = new FileInfo("config.db");
+            //    FileSystemAclExtensions.SetAccessControl(fi, fs);
+            //}
             settings = new ConfigurationBuilder<IAppSettings>()
-                .UseJsonFile("config.db")
+                .UseJsonFile(configFileName)
                 .Build();
             initApiInfo = this.FindControl<StackPanel>("sp_initApiInfo");            
             walletOperationTabControl = this.FindControl<TabControl>("tc_walletOperation");
@@ -777,7 +841,6 @@ namespace AlgoWallet.Views
                     Border bd = new Border() { Classes = new Classes("oneword") };
                     bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
                     item.Children.Add(bd);
-
                 }
             }
             newWalletStep1.IsVisible = true;
@@ -805,8 +868,13 @@ namespace AlgoWallet.Views
                 for(int j = 0; j < 5; j++)
                 {
                     var item = (verifyMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
-                    item.Children.Clear();
+                    if (item.Children.Count > 1)
+                    {
+                        item.Children.RemoveAt(1);
+                    }
+                    //item.Children.Clear();
                     var pos = i * 5 + j;
+                    //item.Children.Add(new TextBox() { Text = (pos + 1) + "." });
                     if (needVerifyPositions.Contains(pos))
                     {
                         //var btnName = "tb_mnemonic_" + pos.ToString();                        
