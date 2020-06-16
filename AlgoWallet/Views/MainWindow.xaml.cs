@@ -57,7 +57,7 @@ namespace AlgoWallet.Views
         //private string accountPassword = "";
         private string walletName = "";
         private byte[] salt = null;
-        private byte[] checkSalt = null;
+        private byte[] scryptedKey = null;
         //ulong accountLastRound; //record the last round of the algoAccount
 
         public MainWindow()
@@ -568,7 +568,7 @@ namespace AlgoWallet.Views
             var passwordTextBox = this.FindControl<TextBox>("tb_enterPassword");
             var enteredPassword = passwordTextBox.Text.Trim();
             salt = Convert.FromBase64String(settings.Salt[index]);
-            checkSalt = Convert.FromBase64String(settings.CheckSalt[index]);
+            var checkSalt = Convert.FromBase64String(settings.CheckSalt[index]);
             var key = CryptoUtils.GenerateHash(salt, enteredPassword);
             for(int i = 0; i < checkSalt.Length; i++)
             {
@@ -586,7 +586,12 @@ namespace AlgoWallet.Views
                     return;
                 }
             }
-            algoAccount = new Account(CryptoUtils.GetMasterKey(key));
+
+            var cipherText = Convert.FromBase64String(settings.CipherText[index]);
+            var tag = Convert.FromBase64String(settings.Tag[index]);
+            var nonce = Encoding.UTF8.GetBytes("algo--wallet");
+            var masterKey = CryptoUtils.DecryptAesGcm(CryptoUtils.GetMasterKey(key), nonce, cipherText, tag);
+            algoAccount = new Account(masterKey);
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
             enterPassword.IsVisible = false;
@@ -819,15 +824,17 @@ namespace AlgoWallet.Views
             //walletOperationTabControl.IsVisible = true;
             //sideBar.IsVisible = true;
             //ChangeWalletRefresh();
-            var key = CryptoUtils.GenerateHash(salt, accountPassword);
-            checkSalt = CryptoUtils.GetCheckSalt(key);
-            var masterKey = CryptoUtils.GetMasterKey(key);
+            scryptedKey = CryptoUtils.GenerateHash(salt, accountPassword);
+            //checkSalt = CryptoUtils.GetCheckSalt(key);
+            //var masterKey = CryptoUtils.GetMasterKey(key);
             //var mnemonicString = GetMnemonicString(mnemonic);
-            algoAccount = new Account(masterKey);
+            //algoAccount = new Account(masterKey);
+            algoAccount = new Account(); //get a random account
             //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
             //algoAccount = new Account();
             mnemonic.Clear();
-            mnemonic.AddRange(Mnemonic.FromKey(masterKey).Split(' '));
+            
+            mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
             showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
             for (int i = 0; i < 5; i++)
             {
@@ -930,6 +937,10 @@ namespace AlgoWallet.Views
                     return;
                 }
             }
+
+            ///create account success
+            ///store information in the setting file
+
             //var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
             //var password = walletPassword.Text;
             //if (password is null || password.Length < 1)
@@ -975,6 +986,7 @@ namespace AlgoWallet.Views
             //var mnemonicString = GetMnemonicString(mnemonic);
             //algoAccount = new Account(mnemonicString);
             //var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
+            var checkSalt = CryptoUtils.GetCheckSalt(scryptedKey);
             if (settings.CheckSalt == null || settings.CheckSalt.Length < 1)
             {
                 settings.CheckSalt = new string[] {
@@ -990,6 +1002,46 @@ namespace AlgoWallet.Views
                 keyList.AddRange(settings.CheckSalt);
                 settings.CheckSalt = keyList.ToArray();
             }
+
+            var aesgcmKey = CryptoUtils.GetMasterKey(scryptedKey);
+            var nonce = Encoding.UTF8.GetBytes("algo--wallet");
+            var aesgcmCipherBytes = CryptoUtils.EncryptAesGcm(aesgcmKey, nonce,
+                Mnemonic.ToKey(algoAccount.ToMnemonic()));
+            var cipherText = CryptoUtils.GetCipherTextFromAesGcmResult(aesgcmCipherBytes);
+            var tag = CryptoUtils.GetTagFromAesGcmResult(aesgcmCipherBytes);
+
+            if (settings.CipherText == null || settings.CipherText.Length < 1)
+            {
+                settings.CipherText = new string[] {
+                    Convert.ToBase64String(cipherText)
+                };
+            }
+            else
+            {
+                var keyList = new List<string>
+                {
+                    Convert.ToBase64String(cipherText)
+                };
+                keyList.AddRange(settings.CipherText);
+                settings.CipherText = keyList.ToArray();
+            }
+
+            if (settings.Tag == null || settings.Tag.Length < 1)
+            {
+                settings.Tag = new string[] {
+                    Convert.ToBase64String(tag)
+                };
+            }
+            else
+            {
+                var keyList = new List<string>
+                {
+                    Convert.ToBase64String(tag)
+                };
+                keyList.AddRange(settings.Tag);
+                settings.Tag = keyList.ToArray();
+            }
+
             newWalletStep2.IsVisible = false;
             walletOperationTabControl.IsVisible = true;
             sideBar.IsVisible = true;

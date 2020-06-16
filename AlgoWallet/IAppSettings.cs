@@ -12,5 +12,8 @@ namespace AlgoWallet
         //string[] Passwords { get; set; }
         string[] Salt { get; set; }
         string[] CheckSalt { get; set; }
+        string[] CipherText { get; set; }
+        string[] Tag { get; set; }
+
     }
 }

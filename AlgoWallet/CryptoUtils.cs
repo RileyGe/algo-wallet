@@ -5,11 +5,45 @@ using System.IO;
 using System.Security.Cryptography;
 using Org.BouncyCastle.Security;
 using System.Text;
+using DynamicData;
+using System.Linq;
 
 namespace AlgoWallet
 {
     public class CryptoUtils
     {
+        public static byte[] EncryptAesGcm(byte[] key, byte[] nonce, byte[] plaintext)
+        {
+            byte[] tag = new byte[16];
+            //var nonce = Encoding.UTF8.GetBytes("algo--wallet");
+            byte[] cipherText = new byte[plaintext.Length];
+            using var cipher = new AesGcm(key);
+            cipher.Encrypt(nonce, plaintext, cipherText, tag);
+            var cipherList = cipherText.ToList();
+            cipherList.Add(tag);
+            return cipherList.ToArray();
+        }
+        public static byte[] GetCipherTextFromAesGcmResult(byte[] result)
+        {
+            if (result.Length == 16 + 32)
+                return result.AsSpan().Slice(0, 32).ToArray();            
+            else
+                return null;
+        }
+        public static byte[] GetTagFromAesGcmResult(byte[] result)
+        {
+            if (result.Length == 16 + 32)
+                return result.AsSpan().Slice(32, 16).ToArray();
+            else
+                return null;
+        }
+        public static byte[] DecryptAesGcm(byte[] key, byte[] nonce, byte[] cipherText, byte[] tag)
+        {
+            byte[] decryptedData = new byte[cipherText.Length];
+            using var cipher = new AesGcm(key);
+            cipher.Decrypt(nonce, cipherText, tag, decryptedData);
+            return decryptedData;
+        }
         /// <summary>
         /// Generate a random 16 bits salt
         /// </summary>
