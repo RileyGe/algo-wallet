@@ -258,14 +258,14 @@
           <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="260">
             <TextBlock Classes="h2" Margin="5 10">Import Wallet</TextBlock>
             <TextBlock Classes="content">Import wallet providing the mnemonic phrase.</TextBlock>
-            <Button  Margin="5 10 5 20">Recover Wallet</Button>
+            <Button  Margin="5 10 5 20" Name="btn_importWallet" Click="OnNewWalletClick">Recover Wallet</Button>
           </StackPanel>
         </Border>        
       </StackPanel>
       <Button HorizontalAlignment="Right" Classes="link" Click="OnBackToHomeClicked">Back to Home</Button>
     </StackPanel>
     <StackPanel Name="sp_newWallet_step0" IsVisible="False">
-      <TextBlock Classes="h1" Margin="0 30 0 20">New Wallet</TextBlock>
+      <TextBlock Classes="h1" Margin="0 30 0 20" Name="tb_newWallet_title">New Wallet</TextBlock>
       <TextBlock HorizontalAlignment="Left" Margin="0 10 0 20">1. Wallet Name</TextBlock>
       <TextBox Width="550" HorizontalAlignment="Left" Name="tb_walletName"></TextBox>
       <StackPanel Orientation="Horizontal" Height="30" VerticalAlignment="Center" Margin="0 20 0 50">
@@ -475,7 +475,130 @@
       </StackPanel>      
     </StackPanel>
 
-    <StackPanel Name="sp_createAsset" IsVisible="False" Orientation="Vertical">
+        <StackPanel Name="sp_importWallet_step2" IsVisible="False">
+            <TextBlock Classes="h1"  Margin="0 30 0 20">Import Wallet</TextBlock>
+            <TextBlock Margin="0 10 0 15">Please enter the mnemonic phrase key to verify the account.</TextBlock>
+            <Border Classes="walletborder">
+                <StackPanel Orientation="Vertical" Name="sp_importMnemonic" Classes="mnemonic">
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock>1.</TextBlock>
+                            <TextBox Name="tb_mnemonic_1"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>2.</TextBlock>
+                            <TextBox Name="tb_mnemonic_2"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>3.</TextBlock>
+                            <TextBox Name="tb_mnemonic_3"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>4.</TextBlock>
+                            <TextBox Name="tb_mnemonic_4"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>5.</TextBlock>
+                            <TextBox Name="tb_mnemonic_5"  Width="70"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock>6.</TextBlock>
+                            <TextBox Name="tb_mnemonic_6"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>7.</TextBlock>
+                            <TextBox Name="tb_mnemonic_7"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>8.</TextBlock>
+                            <TextBox Name="tb_mnemonic_8"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>9.</TextBlock>
+                            <TextBox Name="tb_mnemonic_9"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>10.</TextBlock>
+                            <TextBox Name="tb_mnemonic_10"  Width="70"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock>11.</TextBlock>
+                            <TextBox Name="tb_mnemonic_11"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>12.</TextBlock>
+                            <TextBox Name="tb_mnemonic_12"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>13.</TextBlock>
+                            <TextBox Name="tb_mnemonic_13"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>14.</TextBlock>
+                            <TextBox Name="tb_mnemonic_14"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>15.</TextBlock>
+                            <TextBox Name="tb_mnemonic_15"  Width="70"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock>16.</TextBlock>
+                            <TextBox Name="tb_mnemonic_16"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>17.</TextBlock>
+                            <TextBox Name="tb_mnemonic_17"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>18.</TextBlock>
+                            <TextBox Name="tb_mnemonic_18"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>19.</TextBlock>
+                            <TextBox Name="tb_mnemonic_19"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>20.</TextBlock>
+                            <TextBox Name="tb_mnemonic_20"  Width="70"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock>21.</TextBlock>
+                            <TextBox Name="tb_mnemonic_21"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>22.</TextBlock>
+                            <TextBox Name="tb_mnemonic_22"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>23.</TextBlock>
+                            <TextBox Name="tb_mnemonic_23"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>24.</TextBlock>
+                            <TextBox Name="tb_mnemonic_24"  Width="70"></TextBox>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock>25.</TextBlock>
+                            <TextBox Name="tb_mnemonic_25"  Width="70"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <StackPanel Orientation="Horizontal">
+                <Button Classes="btn" Click="OnNewWalletCancel" Margin="50 20 50 0">Cancel</Button>
+                <Button Classes="btn" Margin="100 20 0 0" Click="OnImportWalletFinishClicked">Create Wallet</Button>
+            </StackPanel>
+        </StackPanel>
+
+      <StackPanel Name="sp_createAsset" IsVisible="False" Orientation="Vertical">
       <TextBlock Classes="h1">Create Asset</TextBlock>
       <TextBlock Margin="120 20 0 20">Please enter the information to create Algorand Standard Asset.</TextBlock>
       <Border Classes="walletborder" Padding="4 20">

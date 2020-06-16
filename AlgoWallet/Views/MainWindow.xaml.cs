@@ -19,6 +19,7 @@ using Org.BouncyCastle.Security;
 using System.Security.AccessControl;
 using System.IO;
 using System.Security.Principal;
+using Org.BouncyCastle.Asn1.Tsp;
 
 namespace AlgoWallet.Views
 {
@@ -28,6 +29,7 @@ namespace AlgoWallet.Views
         int sleepTime = 5000;
         StackPanel walletManagePanel = null;
         TabControl walletOperationTabControl = null;
+        StackPanel importWalletStep2 = null;
         StackPanel newWalletStep0 = null;
         StackPanel newWalletStep1 = null;
         StackPanel newWalletStep2 = null;
@@ -699,6 +701,16 @@ namespace AlgoWallet.Views
         {
             //TabItem settingItem = get            
             newWalletStep0 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
+            var title = this.FindControl<TextBlock>("tb_newWallet_title");            
+            var btn = sender as Button;
+            if (btn.Name == "btn_createWallet")
+            {
+                title.Text = "New Wallet";
+
+            }else if(btn.Name == "btn_importWallet")
+            {
+                title.Text = "Import Wallet";
+            }
             //algoAccount = new Account();
             //mnemonic.Clear();
             //mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
@@ -721,9 +733,29 @@ namespace AlgoWallet.Views
             newWalletStep0.IsVisible = true;
             walletManagePanel.IsVisible = false;
         }
+        public void ImportWalletStep0()
+        {
+            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_importWallet_step2");
+            
+        }
         public void OnCreateWalletStep0(object sender, RoutedEventArgs e)
         {
-            newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step1");
+            var title = this.FindControl<TextBlock>("tb_newWallet_title");
+            StackPanel nextStepStackPanel = null;
+            bool isImport = false;
+            if (title.Text == "Import Wallet")
+            {
+                nextStepStackPanel = this.FindControl<StackPanel>("sp_importWallet_step2");
+                importWalletStep2 = nextStepStackPanel;
+                isImport = true;
+            }
+            else
+            {
+                nextStepStackPanel = this.FindControl<StackPanel>("sp_newWallet_step1");
+                newWalletStep1 = nextStepStackPanel;
+            }
+
+            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step1");
             var walletNameBox = this.FindControl<TextBox>("tb_walletName");
             walletName = walletNameBox.Text;
             if (walletName is null || walletName.Length < 1)
@@ -829,28 +861,31 @@ namespace AlgoWallet.Views
             //var masterKey = CryptoUtils.GetMasterKey(key);
             //var mnemonicString = GetMnemonicString(mnemonic);
             //algoAccount = new Account(masterKey);
-            algoAccount = new Account(); //get a random account
-            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
-            //algoAccount = new Account();
-            mnemonic.Clear();
-            
-            mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
-            showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
-            for (int i = 0; i < 5; i++)
+            if (!isImport)
             {
-                for (int j = 0; j < 5; j++)
+                algoAccount = new Account(); //get a random account
+                                             //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
+                                             //algoAccount = new Account();
+                mnemonic.Clear();
+
+                mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
+                showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
+                for (int i = 0; i < 5; i++)
                 {
-                    var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
-                    if (item.Children.Count > 1)
+                    for (int j = 0; j < 5; j++)
                     {
-                        item.Children.RemoveAt(1);
+                        var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
+                        if (item.Children.Count > 1)
+                        {
+                            item.Children.RemoveAt(1);
+                        }
+                        Border bd = new Border() { Classes = new Classes("oneword") };
+                        bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
+                        item.Children.Add(bd);
                     }
-                    Border bd = new Border() { Classes = new Classes("oneword") };
-                    bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
-                    item.Children.Add(bd);
                 }
-            }
-            newWalletStep1.IsVisible = true;
+            }            
+            nextStepStackPanel.IsVisible = true;
             newWalletStep0.IsVisible = false;
             //walletManagePanel.IsVisible = false;
         }
@@ -900,6 +935,55 @@ namespace AlgoWallet.Views
             }            
             newWalletStep1.IsVisible = false;
             newWalletStep2.IsVisible = true;
+        }
+        private void OnImportWalletFinishClicked(object sender, RoutedEventArgs e)
+        {
+            var importMnemonic = this.FindControl<StackPanel>("sp_importMnemonic");
+            var mnemonicString = "";
+            foreach(StackPanel item in importMnemonic.Children)
+            {
+                foreach(StackPanel childItem in item.Children)
+                {
+                    var mnemonicTextBox = childItem.Children[1] as TextBox;
+                    var mnemonicText = mnemonicTextBox.Text.Trim();
+                    if(mnemonicText == "")
+                    {
+                        var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                        {
+                            ButtonDefinitions = ButtonEnum.Ok,
+                            ContentTitle = "Mnemonic Error",
+                            ContentMessage = "Please Enter the Right Mnemonic Phrase!"
+                        });
+                        msgBox.ShowDialog(this);
+                        mnemonicTextBox.Focus();
+                        return;
+                    }
+                    mnemonicString += mnemonicText + " ";
+                }
+            }
+
+            try
+            {
+                algoAccount = new Account(mnemonicString.Trim());
+            }
+            catch (Exception)
+            {
+                var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                {
+                    ButtonDefinitions = ButtonEnum.Ok,
+                    ContentTitle = "Mnemonic Error",
+                    ContentMessage = "Please Enter the Right Mnemonic Phrase!"
+                });
+                msgBox.ShowDialog(this);
+                return;
+            }            
+
+            SaveSecurityInfo();
+
+            importWalletStep2.IsVisible = false;
+            walletOperationTabControl.IsVisible = true;
+            sideBar.IsVisible = true;
+            ChangeWalletRefresh();
         }
         private void OnCreateWalletFinishClicked(object sender, RoutedEventArgs e)
         {
@@ -956,6 +1040,16 @@ namespace AlgoWallet.Views
             //    return;
             //}
             //var accountPassword = password;
+            SaveSecurityInfo();
+
+            newWalletStep2.IsVisible = false;
+            walletOperationTabControl.IsVisible = true;
+            sideBar.IsVisible = true;
+            ChangeWalletRefresh();
+        }
+
+        private void SaveSecurityInfo()
+        {
             if (settings.Accounts == null || settings.Accounts.Length < 1)
             {
                 settings.Accounts = new string[] { walletName };
@@ -1041,18 +1135,18 @@ namespace AlgoWallet.Views
                 keyList.AddRange(settings.Tag);
                 settings.Tag = keyList.ToArray();
             }
-
-            newWalletStep2.IsVisible = false;
-            walletOperationTabControl.IsVisible = true;
-            sideBar.IsVisible = true;
-            ChangeWalletRefresh();
         }
+
         public void OnNewWalletCancel(object sender, RoutedEventArgs e)
         {
+            if (newWalletStep0 != null)
+                newWalletStep0.IsVisible = false;
             if(newWalletStep1 != null)
                 newWalletStep1.IsVisible = false;
             if(newWalletStep2 != null)
                 newWalletStep2.IsVisible = false;
+            if (importWalletStep2 != null)
+                importWalletStep2.IsVisible = false;
             //sideBar.IsVisible = true;
             //walletOperationTabControl.IsVisible = true;
             CheckAccount();
