@@ -6,23 +6,98 @@ using System.Security.Cryptography;
 using Org.BouncyCastle.Security;
 using System.Text;
 using DynamicData;
-using System.Linq;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto;
 
 namespace AlgoWallet
 {
     public class CryptoUtils
     {
+
+        private const int KEY_BIT_SIZE = 256;
+        private const int MAC_BIT_SIZE = 128;
+        //private const int NONCE_BIT_SIZE = 128;
+
+
+        //decrypt with byte array
+        public static byte[] DecryptAesGcm(byte[] key, byte[] nonce, byte[] cipherText, byte[] tag)
+        {
+            List<byte> msgList = new List<byte>()
+            {
+                cipherText,
+                tag
+            };
+            byte[] message = msgList.ToArray();
+            if (key == null || key.Length != KEY_BIT_SIZE / 8)
+                throw new ArgumentException(String.Format("Key needs to be {0} bit!", KEY_BIT_SIZE), "key");
+            if (message == null || message.Length == 0)
+                throw new ArgumentException("Message required!", "message");
+
+            //using var cipherStream = new MemoryStream(message);
+            //using var cipherReader = new BinaryReader(cipherStream);
+            //var nonSecretPayload = cipherReader.ReadBytes(nonSecretPayloadLength);
+            //var nonce = cipherReader.ReadBytes(NONCE_BIT_SIZE / 8);
+            var cipher = new GcmBlockCipher(new AesEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), MAC_BIT_SIZE, nonce);
+            cipher.Init(false, parameters);
+            //var message = cipherReader.ReadBytes(message.Length);
+            var plainText = new byte[cipher.GetOutputSize(message.Length)];
+            try
+            {
+                var len = cipher.ProcessBytes(message, 0, message.Length, plainText, 0);
+                cipher.DoFinal(plainText, len);
+            }
+            catch (InvalidCipherTextException)
+            {
+                return null;
+            }
+            return plainText;
+        }
+
+        //public static byte[] DecryptAesGcm(byte[] key, byte[] nonce, byte[] cipherText, byte[] tag)
+        //{
+        //    byte[] decryptedData = new byte[cipherText.Length];
+        //    using var cipher = new AesGcm(key);
+        //    cipher.Decrypt(nonce, cipherText, tag, decryptedData);
+        //    return decryptedData;
+        //}
+        //encrypt with byte array
         public static byte[] EncryptAesGcm(byte[] key, byte[] nonce, byte[] plaintext)
         {
-            byte[] tag = new byte[16];
-            //var nonce = Encoding.UTF8.GetBytes("algo--wallet");
-            byte[] cipherText = new byte[plaintext.Length];
-            using var cipher = new AesGcm(key);
-            cipher.Encrypt(nonce, plaintext, cipherText, tag);
-            var cipherList = cipherText.ToList();
-            cipherList.Add(tag);
-            return cipherList.ToArray();
+            if (key == null || key.Length != KEY_BIT_SIZE / 8)
+                throw new ArgumentException(String.Format("Key needs to be {0} bit!", KEY_BIT_SIZE), "key");
+
+            //var nonce = new byte[NONCE_BIT_SIZE / 8];
+            //random.NextBytes(nonce, 0, nonce.Length);
+            var cipher = new GcmBlockCipher(new AesEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), MAC_BIT_SIZE, nonce);
+            cipher.Init(true, parameters);
+            var cipherText = new byte[cipher.GetOutputSize(plaintext.Length)];
+            var len = cipher.ProcessBytes(plaintext, 0, plaintext.Length, cipherText, 0);
+            cipher.DoFinal(cipherText, len);
+            return cipherText;
+            //using var combinedStream = new MemoryStream();
+            //using (var binaryWriter = new BinaryWriter(combinedStream))
+            //{
+            //    //binaryWriter.Write(nonce);
+            //    binaryWriter.Write(cipherText);
+            //}
+            //return combinedStream.ToArray();
         }
+
+        //public static byte[] EncryptAesGcm(byte[] key, byte[] nonce, byte[] plaintext)
+        //{
+        //    byte[] tag = new byte[16];
+        //    //var nonce = Encoding.UTF8.GetBytes("algo--wallet");
+        //    byte[] cipherText = new byte[plaintext.Length];
+        //    using var cipher = new AesGcm(key);
+        //    cipher.Encrypt(nonce, plaintext, cipherText, tag);
+        //    var cipherList = cipherText.ToList();
+        //    cipherList.Add(tag);
+        //    return cipherList.ToArray();
+        //}
         public static byte[] GetCipherTextFromAesGcmResult(byte[] result)
         {
             if (result.Length == 16 + 32)
@@ -37,13 +112,7 @@ namespace AlgoWallet
             else
                 return null;
         }
-        public static byte[] DecryptAesGcm(byte[] key, byte[] nonce, byte[] cipherText, byte[] tag)
-        {
-            byte[] decryptedData = new byte[cipherText.Length];
-            using var cipher = new AesGcm(key);
-            cipher.Decrypt(nonce, cipherText, tag, decryptedData);
-            return decryptedData;
-        }
+        
         /// <summary>
         /// Generate a random 16 bits salt
         /// </summary>

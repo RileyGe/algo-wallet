@@ -593,6 +593,7 @@ namespace AlgoWallet.Views
             var tag = Convert.FromBase64String(settings.Tag[index]);
             var nonce = Encoding.UTF8.GetBytes("algo--wallet");
             var masterKey = CryptoUtils.DecryptAesGcm(CryptoUtils.GetMasterKey(key), nonce, cipherText, tag);
+            //var mmm = CryptoUtils.DecryptWithKey(CryptoUtils.GetMasterKey(key), nonce, cipherText, tag);
             algoAccount = new Account(masterKey);
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
@@ -1101,6 +1102,7 @@ namespace AlgoWallet.Views
             var nonce = Encoding.UTF8.GetBytes("algo--wallet");
             var aesgcmCipherBytes = CryptoUtils.EncryptAesGcm(aesgcmKey, nonce,
                 Mnemonic.ToKey(algoAccount.ToMnemonic()));
+            //var aesgcmCipherBytessss = CryptoUtils.EncryptWithKey(aesgcmKey, nonce, Mnemonic.ToKey(algoAccount.ToMnemonic()));
             var cipherText = CryptoUtils.GetCipherTextFromAesGcmResult(aesgcmCipherBytes);
             var tag = CryptoUtils.GetTagFromAesGcmResult(aesgcmCipherBytes);
 
