@@ -174,7 +174,7 @@
       <!--<Button Name="btn_settings">Settings</Button>-->
     </StackPanel>
     <TabControl Name="tc_walletOperation" Width="540">
-      <TabItem Classes="selected" Header="Infomation" Width="150" HorizontalContentAlignment="Center">
+      <TabItem Classes="selected" Header="Information" Width="150" HorizontalContentAlignment="Center">
         <StackPanel Orientation="Vertical" Background="LightGray" Margin="0" Height="354">
           <StackPanel Orientation="Horizontal" Margin="0 10 0 10" HorizontalAlignment="Center">
             <TextBlock FontSize="20" FontWeight="Medium">Address</TextBlock>
@@ -231,13 +231,13 @@
           </Border>
           <Border Classes="walletborder" Margin="10 50 5 5" Height="300">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Width="200">
-              <TextBlock Classes="h2" Margin="5 10">Activate Asset</TextBlock>
+              <TextBlock Classes="h2" Margin="5 10">Opt in to Asset</TextBlock>
               <TextBlock Classes="content" Width="190">Before using an asset, you should activate it first.</TextBlock>
               <StackPanel Orientation="Horizontal" Height="20">
                 <TextBlock Width="60" Margin="5 0 0 0">Asset ID:</TextBlock>
                 <TextBox Width="130" BorderThickness="0 0 0 1" Padding="0" Margin="0" FontSize="12" Name="tb_assetIdToActivate"></TextBox>
               </StackPanel>
-              <Button  Margin="5 10 5 20" Click="OnActivateAssetClick">Activate Asset</Button>
+              <Button  Margin="5 10 5 20" Click="OnActivateAssetClick">Opt in to Asset</Button>
             </StackPanel>
           </Border>
         </StackPanel>
@@ -642,7 +642,7 @@
             </StackPanel>
           </StackPanel>
           <StackPanel Orientation="Horizontal" Classes="line">
-            <Button Classes="btn" Click="OnCreateAssetCancle">Cancle</Button>
+            <Button Classes="btn" Click="OnCreateAssetCancel">Cancel</Button>
             <Button Click="OnDoCreateAssetClick" Classes="btn">Create</Button>
           </StackPanel>
         </StackPanel>        

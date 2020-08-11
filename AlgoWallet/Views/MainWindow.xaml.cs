@@ -16,10 +16,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Org.BouncyCastle.Security;
-using System.Security.AccessControl;
-using System.IO;
-using System.Security.Principal;
-using Org.BouncyCastle.Asn1.Tsp;
 
 namespace AlgoWallet.Views
 {
@@ -42,12 +38,8 @@ namespace AlgoWallet.Views
         TabItem algoOperation = null;
         StackPanel enterPassword = null;
         ComboBox accountList = null;
-        //Thread updateingThread = null;
         List<string> mnemonic = new List<string>();
         Dictionary<int, TextBox> mnemonicBoxes = new Dictionary<int, TextBox>();
-        //List<TextBox> mnemonicBoxes = new List<TextBox>();
-        //const string apiAddress = "http://hackathon.algodev.network:9100";
-        //const string apiToken = "ef920e2e7e002953f4b29a8af720efe8e4ecc75ff102b165e0472834b25832c1";
         AlgodApi algoInstance = null;
         Account algoAccount = null;
         SynchronizationContext m_SyncContext = null;
@@ -65,71 +57,7 @@ namespace AlgoWallet.Views
         public MainWindow()
         {
             InitializeComponent();
-            //logger.Debug("debug");
-            //logger.Error("error");
-            //logger.Info("Info");
-            var configFileName = "config.db";
-            //if (!File.Exists(configFileName))
-            //{
-
-            //    File.Create(configFileName);
-            //    //var security = new FileSecurity(configFileName,
-            //    //    AccessControlSections.Owner |
-            //    //    AccessControlSections.Group |
-            //    //    AccessControlSections.Access);
-
-            //    //var authorizationRules = security.GetAccessRules(true, true, typeof(NTAccount));
-            //    //var owner = security.GetOwner(typeof(NTAccount));
-            //    //var group = security.GetGroup(typeof(NTAccount));
-            //    //var others = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null)
-            //    //    .Translate(typeof(NTAccount));
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(owner, FileSystemRights.Modify, AccessControlType.Allow),
-            //    //    out bool modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(group, FileSystemRights.Read, AccessControlType.Deny), out modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(group, FileSystemRights.Write, AccessControlType.Deny), out modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(group, FileSystemRights.ExecuteFile, AccessControlType.Deny), out modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(others, FileSystemRights.Read, AccessControlType.Deny), out modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(others, FileSystemRights.Write, AccessControlType.Deny), out modified);
-            //    //security.ModifyAccessRule(AccessControlModification.Add,
-            //    //    new FileSystemAccessRule(others, FileSystemRights.ExecuteFile, AccessControlType.Deny), out modified);
-            //    //foreach (AuthorizationRule rule in authorizationRules)
-            //    //{
-            //    //    if (rule is FileSystemAccessRule fileRule)
-            //    //    {
-
-
-            //    //        if (owner != null && fileRule.IdentityReference == owner)
-            //    //        {
-            //    //            if (fileRule.FileSystemRights.HasFlag(FileSystemRights.ExecuteFile) ||
-            //    //               fileRule.FileSystemRights.HasFlag(FileSystemRights.ReadAndExecute) ||
-            //    //               fileRule.FileSystemRights.HasFlag(FileSystemRights.FullControl))
-            //    //            {
-            //    //                fileRule.FileSystemRights.Is
-            //    //                ownerRights.IsExecutable = true;
-            //    //            }
-            //    //        }
-            //    //        else if (group != null && fileRule.IdentityReference == group)
-            //    //        {
-            //    //            // TO BE CONTINUED...
-            //    //        }
-            //    //    }
-            //    //}
-            //    FileInfo fInfo = new FileInfo(configFileName);
-            //    FileSecurity fs = fInfo.GetAccessControl();
-            //    //FileSecurity fs = new FileSecurity();
-            //    fs.AddAccessRule(new FileSystemAccessRule(Environment.UserName,
-            //        FileSystemRights.Read, AccessControlType.Allow));
-            //    fs.AddAccessRule(new FileSystemAccessRule(Environment.UserName,
-            //        FileSystemRights.Write, AccessControlType.Allow));
-            //    var fi = new FileInfo("config.db");
-            //    FileSystemAclExtensions.SetAccessControl(fi, fs);
-            //}
+            var configFileName = "config.db";            
             settings = new ConfigurationBuilder<IAppSettings>()
                 .UseJsonFile(configFileName)
                 .Build();
@@ -170,11 +98,6 @@ namespace AlgoWallet.Views
             {
                 CheckAccount();
             }            
-            //ContentControl info = new ContentControl
-            //{
-            //    Content = new TransInfo() { TxID = "QIO65UJARQSVMNRKW3DMZGKCQGORSPBIBP4HIFHKCQFE3JKH3BCA" }
-            //};
-            //this.FindControl<StackPanel>("sp_transInfos").Children.Add(info);
         }
 
         private void ShowConfigAccessPoint()
@@ -268,12 +191,9 @@ namespace AlgoWallet.Views
         }
         private void UpdateAssetsAndTransactions()
         {
-            //accountAssets.Clear();
-            //transList.Clear();
-            //...执行线程任务
             bool isListening = false;
             var accAdr = algoAccount.Address.ToString();
-            long? roundUtill = 0;//这个数字之前的round都已经获取
+            long? roundUtill = 0;
 
             while (accAdr == algoAccount.Address.ToString())
             {
@@ -293,7 +213,6 @@ namespace AlgoWallet.Views
                                 if (accountAssets.Count(p => p.Key == pair.Key) == 0)
                                 {
                                     accountAssets.Add(pair);
-                                    //在线程中更新UI（通过UI线程同步上下文m_SyncContext）
                                     object[] state = new object[] { pair, act.GetHolding(pair.Key).Amount };
                                     if (accAdr == algoAccount.Address.ToString())
                                         m_SyncContext.Post(UpdateAssetsList, state);
@@ -324,21 +243,16 @@ namespace AlgoWallet.Views
                     }
                     else
                     {
-                        //inital                    
-
                         roundUtill = lastRound;
                         long? firstRound = lastRound - 1000 * 24;
                         ulong? balance = act.Amount;
-                        //var block = algoInstance.GetBlock(3692494);
 
                         while (true)
                         {
-                            //ulong? lr = 0;
                             try
                             {
                                 var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
                                     firstRound: firstRound, lastRound: lastRound).Transactions;
-                                //lr = 0;
                                 foreach (var item in translist)
                                 {
                                     if (UpdateTransaction2UI(accAdr, item))
@@ -360,37 +274,12 @@ namespace AlgoWallet.Views
                                             }
                                         }
                                     }
-                                    //if (transList.Count(p => p.TxID == item.Tx) == 0)
-                                    //{
-                                    //    var block = algoInstance.GetBlock((long?)item.Round);
-                                    //    var transInfo = new TransInfo(item, accAdr)
-                                    //    {
-                                    //        CreateTime = ConvertIntDatetime((ulong)block.Timestamp)
-                                    //    };
-                                    //    var index = transList.FindIndex(p => p.CreateTime < transInfo.CreateTime);
-                                    //    if (index < 0)
-                                    //    {
-                                    //        transList.Add(transInfo);
-                                    //        //lr = item.Round;
-                                    //    }
-                                    //    else
-                                    //        transList.Insert(index, transInfo);
-                                    //    object[] param = new object[]
-                                    //    {
-                                    //index, transInfo
-                                    //    };
-                                    //    //transList.Add(transInfo);
-                                    //    m_SyncContext.Post(UpdateTransListSP, param);
-                                    //    //UpdateTransListSP(info);  
-                                    //}
                                 }
 
                             }
                             catch (Exception) { }
-                            //if (accountLastRound > 0) break;
                             if (balance == 0)
                             {
-                                //accountLastRound = (ulong)lr;
                                 isListening = true;
                                 break;
                             }
@@ -405,9 +294,8 @@ namespace AlgoWallet.Views
                 catch(Exception)
                 {
                     Thread.Sleep(sleepTime);
-                }                
+                }
             }
-            //algoInstance.transaction
         }
 
         private void UpdateAlgoButton(object state)
@@ -431,7 +319,6 @@ namespace AlgoWallet.Views
                 if (index < 0)
                 {
                     transList.Add(transInfo);
-                    //lr = item.Round;
                 }
                 else
                     transList.Insert(index, transInfo);
@@ -439,7 +326,6 @@ namespace AlgoWallet.Views
                 {
                     index, transInfo
                 };
-                //transList.Add(transInfo);
                 if(accAdr == algoAccount.Address.ToString())
                     m_SyncContext.Post(UpdateTransListSP, param);
                 return true;
@@ -476,7 +362,6 @@ namespace AlgoWallet.Views
         }
         private void UpdateAssetsList(object state)
         {
-            //state is List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>
             object[] objectList = null;
 
             if (state is object[])
@@ -497,16 +382,6 @@ namespace AlgoWallet.Views
                 btn.Click += OnAssetClick;
                 assetsListPanel.Children.Add(btn);
             }
-            //if (state is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair)
-            //{
-            //    Button btn = new Button()
-            //    {
-            //        Content = pair.Value.Assetname,
-            //        Name = "btn_" + pair.Key.ToString()
-            //    };
-            //    btn.Click += OnAssetClick;
-            //    assetsListPanel.Children.Add(btn);
-            //}
         }
 
         private void InitializeComponent()
@@ -522,7 +397,6 @@ namespace AlgoWallet.Views
             {
                 IsBackground = true
             }.Start(urlAndtoken);
-            //new Thread(new ParameterizedThreadStart(this.TestingConnection)).Start();
         }
         public void OnActivateAssetClick(object sender, RoutedEventArgs e)
         {
@@ -552,10 +426,7 @@ namespace AlgoWallet.Views
                 }
                 catch (Exception apiex)
                 {
-                    //e.printStackTrace();
                     MessageBoxManager.GetMessageBoxStandardWindow("Request Error", "Error hanppen:" + apiex.Message);
-                    //Console.WriteLine(apiex.Message);
-                    //return;
                 }
             }
         }
@@ -588,40 +459,17 @@ namespace AlgoWallet.Views
                     return;
                 }
             }
-
             var cipherText = Convert.FromBase64String(settings.CipherText[index]);
             var tag = Convert.FromBase64String(settings.Tag[index]);
+            //Using a fixed nonce. This is secure because you will only do a single encryption using AES-GCM.
             var nonce = Encoding.UTF8.GetBytes("algo--wallet");
             var masterKey = CryptoUtils.DecryptAesGcm(CryptoUtils.GetMasterKey(key), nonce, cipherText, tag);
-            //var mmm = CryptoUtils.DecryptWithKey(CryptoUtils.GetMasterKey(key), nonce, cipherText, tag);
             algoAccount = new Account(masterKey);
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
             enterPassword.IsVisible = false;
             passwordTextBox.Text = "";
             ChangeWalletRefresh();
-            //if (OpenBsdBCrypt.CheckPassword(settings.Passwords[index],
-            //    enteredPassword.ToCharArray()))
-            //{
-            //    var accountPassword = enteredPassword;
-            //    var seed = CryptoUtils.DecryptAES(accountPassword, settings.Mnemonics[index]);
-            //    algoAccount = new Account(seed);
-                
-            //    //this.FindControl<TextBox>("tb_accountAddress").Text = algoAccount.Address.ToString();
-            //    //new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
-            //}
-            //else
-            //{
-            //    var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-            //    {
-            //        ButtonDefinitions = ButtonEnum.Ok,
-            //        ContentTitle = "Password Not Right",
-            //        ContentMessage = "The wallet name and password not match, please try again."
-            //    });
-            //    msBoxStandardWindow.ShowDialog(this);
-            //    passwordTextBox.Text = "";
-            //    passwordTextBox.Focus();
-            //}
         }
         public void OnSaveApiClicked(object sender, RoutedEventArgs e)
         {            
@@ -636,16 +484,6 @@ namespace AlgoWallet.Views
 
             initApiInfo.IsVisible = false;
             CheckAccount();
-
-            //if (settings.Accounts is null || settings.Accounts.Length < 1)
-            //{
-            //    walletManagePanel.IsVisible = true;
-            //}
-            //else
-            //{
-            //    walletOperationTabControl.IsVisible = true;
-            //    sideBar.IsVisible = true;
-            //}
         }
         public void OnAssetClick(object sender, RoutedEventArgs e)
         {            
@@ -680,27 +518,17 @@ namespace AlgoWallet.Views
                     }
                     algoOperation.IsVisible = false;
                 }
-            }
-            //var btn = sender as Button;            
+            }         
         }
-        //public void OnAlgoClick(object sender, RoutedEventArgs e)
-        //{
-
-        //    selectedAssetId = 0;
-        //    algoOperation ??= this.FindControl<TabItem>("ti_algoOperation");
-        //    algoOperation.IsVisible = true;
-        //}
         public void OnWalletClick(object sender, RoutedEventArgs e)
-        {
-            //TabItem settingItem = get            
+        {         
             walletOperationTabControl.IsVisible = false;
             sideBar.IsVisible = false;
             enterPassword.IsVisible = false;
             walletManagePanel.IsVisible = true;
         }
         public void OnNewWalletClick(object sender, RoutedEventArgs e)
-        {
-            //TabItem settingItem = get            
+        {          
             newWalletStep0 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
             var title = this.FindControl<TextBlock>("tb_newWallet_title");            
             var btn = sender as Button;
@@ -712,32 +540,12 @@ namespace AlgoWallet.Views
             {
                 title.Text = "Import Wallet";
             }
-            //algoAccount = new Account();
-            //mnemonic.Clear();
-            //mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
-            //showMnemonic ??= this.FindControl<StackPanel>("sp_showMnemonic");
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    for (int j = 0; j < 5; j++)
-            //    {
-            //        var item = (showMnemonic.Children[i] as StackPanel).Children[j] as StackPanel;
-            //        if(item.Children.Count > 1)
-            //        {
-            //            item.Children.RemoveAt(1);
-            //        }
-            //        Border bd = new Border() { Classes = new Classes("oneword") };
-            //        bd.Child = new TextBlock { Text = mnemonic[i * 5 + j] };
-            //        item.Children.Add(bd);     
-                    
-            //    }
-            //}
             newWalletStep0.IsVisible = true;
             walletManagePanel.IsVisible = false;
         }
         public void ImportWalletStep0()
         {
-            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_importWallet_step2");
-            
+            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_importWallet_step2");            
         }
         public void OnCreateWalletStep0(object sender, RoutedEventArgs e)
         {
@@ -755,8 +563,6 @@ namespace AlgoWallet.Views
                 nextStepStackPanel = this.FindControl<StackPanel>("sp_newWallet_step1");
                 newWalletStep1 = nextStepStackPanel;
             }
-
-            //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step1");
             var walletNameBox = this.FindControl<TextBox>("tb_walletName");
             walletName = walletNameBox.Text;
             if (walletName is null || walletName.Length < 1)
@@ -771,26 +577,6 @@ namespace AlgoWallet.Views
                 walletNameBox.Focus();
                 return;
             }
-            //foreach (var item in mnemonicBoxes)
-            //{
-            //    //var box = this.FindControl<TextBox>(item);
-            //    var boxContent = item.Value.Text;
-            //    if (!(boxContent is null))
-            //        boxContent = boxContent.Trim();
-            //    var index = item.Key;
-            //    if (boxContent != mnemonic[index])
-            //    {
-            //        var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-            //        {
-            //            ButtonDefinitions = ButtonEnum.Ok,
-            //            ContentTitle = "Mnemonic Error",
-            //            ContentMessage = "Please Enter the Right Mnemonic Phrase!"
-            //        });
-            //        msgBox.ShowDialog(this);
-            //        item.Value.Focus();
-            //        return;
-            //    }
-            //}
             var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
             var accountPassword = walletPassword.Text;
             if (accountPassword is null || accountPassword.Length < 1)
@@ -805,68 +591,11 @@ namespace AlgoWallet.Views
                 walletPassword.Focus();
                 return;
             }
-            //accountPassword = password;
-            salt = CryptoUtils.GenerateRandomSalt();
-            //if (settings.Accounts == null || settings.Accounts.Length < 1)
-            //{
-            //    settings.Accounts = new string[] {
-            //        this.FindControl<TextBox>("tb_walletName").Text.Trim()
-            //    };
-            //}
-            //else
-            //{
-            //    var accountList = new List<string>{
-            //        this.FindControl<TextBox>("tb_walletName").Text.Trim() };
-            //    accountList.AddRange(settings.Accounts);
-            //    settings.Accounts = accountList.ToArray();
-            //}
-            //if (settings.Passwords == null || settings.Passwords.Length < 1)
-            //{
-            //    settings.Passwords = new string[] {
-            //        CryptoUtils.GenerateBcryptHash(accountPassword)
-            //    };
-            //}
-            //else
-            //{
-            //    var psdList = new List<string>
-            //    {
-            //        CryptoUtils.GenerateBcryptHash(accountPassword)
-            //    };
-            //    psdList.AddRange(settings.Passwords);
-            //    settings.Passwords = psdList.ToArray();
-            //}
-            //var mnemonicString = GetMnemonicString(mnemonic);
-            //algoAccount = new Account(mnemonicString);
-            //var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
-            //if (settings.Mnemonics == null || settings.Mnemonics.Length < 1)
-            //{
-            //    settings.Mnemonics = new string[] {
-            //        encryptedMasterKey
-            //    };
-            //}
-            //else
-            //{
-            //    var keyList = new List<string>
-            //    {
-            //        encryptedMasterKey
-            //    };
-            //    keyList.AddRange(settings.Mnemonics);
-            //    settings.Mnemonics = keyList.ToArray();
-            //}
-            //newWalletStep2.IsVisible = false;
-            //walletOperationTabControl.IsVisible = true;
-            //sideBar.IsVisible = true;
-            //ChangeWalletRefresh();
+            salt = CryptoUtils.GenerateRandomSalt();            
             scryptedKey = CryptoUtils.GenerateHash(salt, accountPassword);
-            //checkSalt = CryptoUtils.GetCheckSalt(key);
-            //var masterKey = CryptoUtils.GetMasterKey(key);
-            //var mnemonicString = GetMnemonicString(mnemonic);
-            //algoAccount = new Account(masterKey);
             if (!isImport)
             {
-                algoAccount = new Account(); //get a random account
-                                             //newWalletStep1 ??= this.FindControl<StackPanel>("sp_newWallet_step0");
-                                             //algoAccount = new Account();
+                algoAccount = new Account(); 
                 mnemonic.Clear();
 
                 mnemonic.AddRange(algoAccount.ToMnemonic().Split(' '));
@@ -888,11 +617,9 @@ namespace AlgoWallet.Views
             }            
             nextStepStackPanel.IsVisible = true;
             newWalletStep0.IsVisible = false;
-            //walletManagePanel.IsVisible = false;
         }
         public void OnNewWalletStep1ContinueClick(object sender, RoutedEventArgs e)
-        {
-            //TabItem settingItem = get            
+        {      
             newWalletStep2 ??= this.FindControl<StackPanel>("sp_newWallet_step2");
             verifyMnemonic ??= this.FindControl<StackPanel>("sp_verifyMnemonic");
             SecureRandom rd = new SecureRandom();
@@ -915,14 +642,10 @@ namespace AlgoWallet.Views
                     {
                         item.Children.RemoveAt(1);
                     }
-                    //item.Children.Clear();
                     var pos = i * 5 + j;
-                    //item.Children.Add(new TextBox() { Text = (pos + 1) + "." });
                     if (needVerifyPositions.Contains(pos))
-                    {
-                        //var btnName = "tb_mnemonic_" + pos.ToString();                        
+                    {                   
                         var box = new TextBox() { Width = 70 };
-                        //box.DataContextChanged += this.Box_DataContextChanged;
                         mnemonicBoxes.Add(pos, box);
                         item.Children.Add(box);
                     }
@@ -988,20 +711,6 @@ namespace AlgoWallet.Views
         }
         private void OnCreateWalletFinishClicked(object sender, RoutedEventArgs e)
         {
-            //var walletNameBox = this.FindControl<TextBox>("tb_walletName");
-            //var walletName = walletNameBox.Text;
-            //if (walletName is null || walletName.Length < 1)
-            //{
-            //    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-            //    {
-            //        ButtonDefinitions = ButtonEnum.Ok,
-            //        ContentTitle = "Wallet Name Error",
-            //        ContentMessage = "Please Enter the Wallet Name!"
-            //    });
-            //    msgBox.ShowDialog(this);
-            //    walletNameBox.Focus();
-            //    return;
-            //}
             foreach (var item in mnemonicBoxes)
             {
                 //var box = this.FindControl<TextBox>(item);
@@ -1021,26 +730,7 @@ namespace AlgoWallet.Views
                     item.Value.Focus();
                     return;
                 }
-            }
-
-            ///create account success
-            ///store information in the setting file
-
-            //var walletPassword = this.FindControl<TextBox>("tb_walletPassword");
-            //var password = walletPassword.Text;
-            //if (password is null || password.Length < 1)
-            //{
-            //    var msgBox = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-            //    {
-            //        ButtonDefinitions = ButtonEnum.Ok,
-            //        ContentTitle = "Wallet Password Error",
-            //        ContentMessage = "Please Enter the Password!"
-            //    });
-            //    msgBox.ShowDialog(this);
-            //    walletPassword.Focus();
-            //    return;
-            //}
-            //var accountPassword = password;
+            }            
             SaveSecurityInfo();
 
             newWalletStep2.IsVisible = false;
@@ -1065,7 +755,6 @@ namespace AlgoWallet.Views
             if (settings.Salt == null || settings.Salt.Length < 1)
             {
                 settings.Salt = new string[] {
-                    //CryptoUtils.EncryptAES(accountPassword)
                     Convert.ToBase64String(salt)
                 };
             }
@@ -1078,9 +767,6 @@ namespace AlgoWallet.Views
                 psdList.AddRange(settings.Salt);
                 settings.Salt = psdList.ToArray();
             }
-            //var mnemonicString = GetMnemonicString(mnemonic);
-            //algoAccount = new Account(mnemonicString);
-            //var encryptedMasterKey = CryptoUtils.EncryptAES(accountPassword, Mnemonic.ToKey(mnemonicString));
             var checkSalt = CryptoUtils.GetCheckSalt(scryptedKey);
             if (settings.CheckSalt == null || settings.CheckSalt.Length < 1)
             {
@@ -1099,10 +785,10 @@ namespace AlgoWallet.Views
             }
 
             var aesgcmKey = CryptoUtils.GetMasterKey(scryptedKey);
+            //Using a fixed nonce. This is secure because you will only do a single encryption using AES-GCM.
             var nonce = Encoding.UTF8.GetBytes("algo--wallet");
             var aesgcmCipherBytes = CryptoUtils.EncryptAesGcm(aesgcmKey, nonce,
                 Mnemonic.ToKey(algoAccount.ToMnemonic()));
-            //var aesgcmCipherBytessss = CryptoUtils.EncryptWithKey(aesgcmKey, nonce, Mnemonic.ToKey(algoAccount.ToMnemonic()));
             var cipherText = CryptoUtils.GetCipherTextFromAesGcmResult(aesgcmCipherBytes);
             var tag = CryptoUtils.GetTagFromAesGcmResult(aesgcmCipherBytes);
 
@@ -1149,17 +835,9 @@ namespace AlgoWallet.Views
                 newWalletStep2.IsVisible = false;
             if (importWalletStep2 != null)
                 importWalletStep2.IsVisible = false;
-            //sideBar.IsVisible = true;
-            //walletOperationTabControl.IsVisible = true;
             CheckAccount();
 
         }
-        //public void OnNewWalletStep2Cancel(object sender, RoutedEventArgs e)
-        //{
-        //    newWalletStep2.IsVisible = false;
-        //    sideBar.IsVisible = true;
-        //    walletOperationTabControl.IsVisible = true;
-        //}
         public void OnAlgoOrAssetSendClick(object sender, RoutedEventArgs e)
         {
             var sendingStatus = this.FindControl<TextBlock>("tb_sendingStatus");
@@ -1205,7 +883,6 @@ namespace AlgoWallet.Views
             {
                 MessageBoxManager.GetMessageBoxStandardWindow("Could not get params",
                     "Could not get params with exception:" + apiex.Message + ". Please try again later.").ShowDialog(this);
-                //throw new Exception("Could not get params", e);
                 sendingStatus.IsVisible = false;
                 return;
             }
@@ -1215,19 +892,15 @@ namespace AlgoWallet.Views
                 var tx = Utils.GetPaymentTransaction(algoAccount.Address, new Address(sendToAddress.Text.Trim()), 
                     amount, sendToStringMessage, transParams);
 
-                // send the transaction to the network
                 try
                 {
                     var signedTx = algoAccount.SignTransaction(tx);
                     var id = Utils.SubmitTransaction(algoInstance, signedTx);
-                    //Console.WriteLine("Successfully sent tx with id: " + id.TxId);
                 }
                 catch (ApiException apiex)
                 {
-                    // This is generally expected, but should give us an informative error message.
                     MessageBoxManager.GetMessageBoxStandardWindow("Exception",
                         "Exception when sending:" + apiex.Message).ShowDialog(this);
-                    //throw new Exception("Could not get params", e);
                     sendingStatus.IsVisible = false;
                     return;
                 }
@@ -1240,30 +913,17 @@ namespace AlgoWallet.Views
                 try
                 {
                     var id = Utils.SubmitTransaction(algoInstance, signedTx);
-                    //Console.WriteLine("Transaction ID: " + id.TxId);
-                    //Console.WriteLine(Utils.WaitTransactionToComplete(algoInstance, id.TxId));
-                    // We can now list the account information for acct3 
-                    // and see that it now has 5 of the new asset
-                    //act = algodApiInstance.AccountInformation(acct3.Address.ToString());
-                    //Console.WriteLine(act.GetHolding(assetID).Amount);
                 }
                 catch (Exception apiex)
                 {
-                    //e.printStackTrace();
                     MessageBoxManager.GetMessageBoxStandardWindow("Exception",
                         "Exception when sending:" + apiex.Message).ShowDialog(this);
-                    //throw new Exception("Could not get params", e);
                     sendingStatus.IsVisible = false;
                     return;
                 }
             }
             sendingStatus.Text = "Send Success!";
-        }
-        
-        private void Box_DataContextChanged(object sender, EventArgs e)
-        {
-            //throw new NotImplementedException();
-        }    
+        }       
         private void ChangeWalletRefresh()
         {
             //change the wallet
@@ -1272,25 +932,17 @@ namespace AlgoWallet.Views
             //step 1: clear the assets and assets buttons
             accountAssets.Clear();
             assetsListPanel.Children.Clear();
-            //step 2: clear the transactions and the transaction infomation
+            //step 2: clear the transactions and the transaction information
             transList.Clear();
             this.FindControl<StackPanel>("sp_transInfos").Children.Clear();
             //step 3: runnig the updating
-            //if (!(updateingThread is null))
-            //    updateingThread.Abort();
-            
-            //updateingThread.c
-            //CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            //new Task(() => this.UpdateAssetsAndTransactions(cancelTokenSource.Token), )
             new Thread(new ThreadStart(this.UpdateAssetsAndTransactions)) { IsBackground = true }.Start();
         }
-
         private string GetMnemonicString(List<string> mnemonic)
         {
             string retStr = "";
             mnemonic.ForEach(item => retStr += item + " ");
             return retStr.Trim();
-            //throw new NotImplementedException();
         }
         public void OnCreateAssetClick(object sender, RoutedEventArgs e)
         {
@@ -1416,21 +1068,6 @@ namespace AlgoWallet.Views
             var reserverAddress = this.FindControl<TextBox>("tb_assetReserver").Text;            
             var clawbackerAddress = this.FindControl<TextBox>("tb_assetClawbacker").Text;            
             var freezerAddress = this.FindControl<TextBox>("tb_assetFreezer").Text;
-
-            //if (managerAddress is null ||
-            //    reserverAddress is null ||
-            //    clawbackerAddress is null ||
-            //    freezerAddress is null)
-            //{
-            //    var msBoxStandardWindow = MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
-            //    {
-            //        ButtonDefinitions = ButtonEnum.Ok,
-            //        ContentTitle = "Default Address",
-            //        ContentMessage = "If you leave the Manager Address, Reserve Address, Clawbacke Address or Freeze Address to blank, current user account address will be used."
-            //    });
-            //    msBoxStandardWindow.ShowDialog(this);
-            //    //this.FindControl<TextBox>("tb_metadatahash").Focus();
-            //}
             managerAddress ??= algoAccount.Address.ToString();
             reserverAddress ??= algoAccount.Address.ToString();
             clawbackerAddress ??= algoAccount.Address.ToString();
@@ -1439,28 +1076,21 @@ namespace AlgoWallet.Views
                 unitname: unitName, defaultfrozen: frozen, total: total,
                 url: url, managerkey: managerAddress, reserveaddr: reserverAddress, clawbackaddr: clawbackerAddress,
                 freezeaddr:freezerAddress, metadatahash: metadatahash);
-            //ap.Creator = algoAccount.Address.ToString();
-            //ap.Metadatahash = "16efaa3924a6fd9d3a4880099a4ac65d";
 
             var transParams = algoInstance.TransactionParams();
             var tx = Utils.GetCreateAssetTransaction(ap, transParams, "asset generate by AlgoWallet", decimals);
 
             // Sign the Transaction by sender
             SignedTransaction signedTx = algoAccount.SignTransaction(tx);
-            // send the transaction to the network and
-            // wait for the transaction to be confirmed
             try
             {
                 var id = Utils.SubmitTransaction(algoInstance, signedTx);
                 Utils.WaitTransactionToComplete(algoInstance, id.TxId);
                 var ptx = algoInstance.PendingTransactionInformation(id.TxId);
-                //var ptx = algoInstance.Transaction(id.TxId);
                 selectedAssetId = (ulong)ptx.Txresults.Createdasset;
                 var pair = new KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>(selectedAssetId, ap);
                 accountAssets.Add(pair);
                 UpdateAssetsList(accountAssets);
-                //clear all the text
-
                 createAsset.IsVisible = false;
                 sideBar.IsVisible = true;
                 walletOperationTabControl.IsVisible = true;
@@ -1476,9 +1106,8 @@ namespace AlgoWallet.Views
                 msBoxStandardWindow.ShowDialog(this);
                 return;
             }
-            //Console.WriteLine("AssetID = " + assetID);
         }
-        private void OnCreateAssetCancle(object sender, RoutedEventArgs e)
+        private void OnCreateAssetCancel(object sender, RoutedEventArgs e)
         {
             sideBar.IsVisible = true;
             walletOperationTabControl.IsVisible = true;
