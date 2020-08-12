@@ -297,6 +297,20 @@ namespace AlgoWallet.Views
                 }
             }
             m_SyncContext.Post(UpdateRefreshButton, false);
+            m_SyncContext.Post(CheckTransListSP, null);
+        }
+
+        private void CheckTransListSP(object transInfo)
+        {
+            var transInfoSP = this.FindControl<StackPanel>("sp_transInfos");
+            var count = transInfoSP.Children.Count;
+            if (count == 0)
+                transInfoSP.Children.Add(
+                    new TextBox
+                    {
+                        Text = "Transactions are getting fetched. If you do not see any transactions, check that your Algorand node is in Archival mode and the property isIndexerActive is true: https://developer.algorand.org/docs/reference/node/config/",                        
+                        Classes = new Avalonia.Controls.Classes("sp_empty_info")                        
+                    });
         }
 
         private void UpdateAlgoButton(object state)
@@ -358,14 +372,15 @@ namespace AlgoWallet.Views
             {
                 if (objs[0] is int index && objs[1] is TransInfo trans)
                 {
+                    var transInfoSP = this.FindControl<StackPanel>("sp_transInfos");
                     if (index < 0)
-                        this.FindControl<StackPanel>("sp_transInfos").Children.Add(
+                        transInfoSP.Children.Add(
                             new ContentControl
                             {
                                 Content = trans
                             });
                     else
-                        this.FindControl<StackPanel>("sp_transInfos").Children.Insert(index,
+                        transInfoSP.Children.Insert(index,
                             new ContentControl
                             {
                                 Content = trans
