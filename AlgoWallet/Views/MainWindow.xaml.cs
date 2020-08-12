@@ -245,7 +245,7 @@ namespace AlgoWallet.Views
                     {
                         roundUtill = lastRound;
                         long? firstRound = lastRound - 1000 * 24;
-                        long? balance = (long?)act.Amount;
+                        long? balance = (long?)act.Amount - (long?)act.Rewards;
 
                         while (true)
                         {
@@ -260,7 +260,7 @@ namespace AlgoWallet.Views
                                         if (item.From == accAdr)
                                         {
                                             balance += (long?)item.Fee;
-                                            balance -= (long?)item.Fromrewards;
+                                            //balance -= (long?)item.Fromrewards;
                                         }
                                         if (item.Type == "pay")
                                         {
@@ -334,7 +334,7 @@ namespace AlgoWallet.Views
                 {
                     freshingButton.Content = "Refresh";
                     freshingButton.IsEnabled = true;
-                }                
+                }
             }
         }
 
@@ -462,6 +462,7 @@ namespace AlgoWallet.Views
 
                     var signedTx = algoAccount.SignTransaction(tx);
                     var id = Utils.SubmitTransaction(algoInstance, signedTx);
+                    ChangeWalletRefresh();
                 }
                 catch (Exception apiex)
                 {
@@ -970,7 +971,7 @@ namespace AlgoWallet.Views
             sendToAmount.Text = "";
             this.FindControl<TextBox>("tb_sendToMessage").Text = "";
             walletOperationTabControl.SelectedIndex = 0;
-
+            ChangeWalletRefresh();
         }       
         private void ChangeWalletRefresh()
         {
@@ -1142,6 +1143,7 @@ namespace AlgoWallet.Views
                 createAsset.IsVisible = false;
                 sideBar.IsVisible = true;
                 walletOperationTabControl.IsVisible = true;
+                ChangeWalletRefresh();
             }
             catch (Exception)
             {
