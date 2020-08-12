@@ -191,13 +191,13 @@ namespace AlgoWallet.Views
         }
         private void UpdateAssetsAndTransactions()
         {
-            bool isListening = false;
+            bool updatingFinished = false;
             var accAdr = algoAccount.Address.ToString();
             long? roundUtill = 0;
-
-            while (accAdr == algoAccount.Address.ToString())
+            m_SyncContext.Post(UpdateRefreshButton, true);
+            while (!updatingFinished)
             {
-                try {
+                try {                    
                     var act = algoInstance.AccountInformation(algoAccount.Address.ToString());
                     if (accAdr == algoAccount.Address.ToString())                    
                         m_SyncContext.Post(UpdateAlgoButton, act);
@@ -225,23 +225,23 @@ namespace AlgoWallet.Views
                     }
                     var transParams = algoInstance.TransactionParams();
                     long? lastRound = (long?)transParams.LastRound;
-                    if (isListening)
-                    {
-                        long? firstRound = roundUtill;
-                        try
-                        {
-                            var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
-                                firstRound: firstRound, lastRound: lastRound).Transactions;
-                            foreach (var item in translist)
-                            {
-                                UpdateTransaction2UI(accAdr, item);
-                            }
+                    //if (isListening)
+                    //{
+                    //    long? firstRound = roundUtill;
+                    //    try
+                    //    {
+                    //        var translist = algoInstance.Transactions(algoAccount.Address.ToString(),
+                    //            firstRound: firstRound, lastRound: lastRound).Transactions;
+                    //        foreach (var item in translist)
+                    //        {
+                    //            UpdateTransaction2UI(accAdr, item);
+                    //        }
 
-                        }
-                        catch (Exception) { }
-                        Thread.Sleep(sleepTime);
-                    }
-                    else
+                    //    }
+                    //    catch (Exception) { }
+                    //    Thread.Sleep(sleepTime);
+                    //}
+                    //else
                     {
                         roundUtill = lastRound;
                         long? firstRound = lastRound - 1000 * 24;
@@ -280,7 +280,7 @@ namespace AlgoWallet.Views
                             catch (Exception) { }
                             if (balance == 0)
                             {
-                                isListening = true;
+                                updatingFinished = true;
                                 break;
                             }
                             else
@@ -296,6 +296,7 @@ namespace AlgoWallet.Views
                     Thread.Sleep(sleepTime);
                 }
             }
+            m_SyncContext.Post(UpdateRefreshButton, false);
         }
 
         private void UpdateAlgoButton(object state)
@@ -304,6 +305,24 @@ namespace AlgoWallet.Views
             {
                 this.FindControl<Button>("btn_algo").Content = string.Format("Algos({0})", Utils.MicroalgosToAlgos((ulong)act.Amount));
             }            
+        }
+
+        private void UpdateRefreshButton(object state)
+        {
+            if (state is bool isRefreshing)
+            {
+                var freshingButton = this.FindControl<Button>("btn_refreshing");
+                if (isRefreshing)
+                {
+                    freshingButton.Content = "Refreshing";
+                    freshingButton.IsEnabled = false;                    
+                }
+                else
+                {
+                    freshingButton.Content = "Refresh";
+                    freshingButton.IsEnabled = true;
+                }                
+            }
         }
 
         private bool UpdateTransaction2UI(string accAdr, Algorand.Algod.Client.Model.Transaction item)
@@ -484,6 +503,10 @@ namespace AlgoWallet.Views
 
             initApiInfo.IsVisible = false;
             CheckAccount();
+        }
+        public void OnAccountRefresh(object sender, RoutedEventArgs e)
+        {
+            ChangeWalletRefresh();
         }
         public void OnAssetClick(object sender, RoutedEventArgs e)
         {            
