@@ -245,7 +245,7 @@ namespace AlgoWallet.Views
                     {
                         roundUtill = lastRound;
                         long? firstRound = lastRound - 1000 * 24;
-                        ulong? balance = act.Amount;
+                        long? balance = (long?)act.Amount;
 
                         while (true)
                         {
@@ -259,23 +259,22 @@ namespace AlgoWallet.Views
                                     {
                                         if (item.From == accAdr)
                                         {
-                                            balance += item.Fee;
-                                            balance -= item.Fromrewards;
+                                            balance += (long?)item.Fee;
+                                            balance -= (long?)item.Fromrewards;
                                         }
                                         if (item.Type == "pay")
                                         {
                                             if (item.From == accAdr)
                                             {
-                                                balance += item.Payment.Amount;
+                                                balance += (long?)item.Payment.Amount;
                                             }
                                             else if (item.Payment.To == accAdr)
                                             {
-                                                balance -= item.Payment.Amount;
+                                                balance -= (long?)item.Payment.Amount;
                                             }
                                         }
                                     }
                                 }
-
                             }
                             catch (Exception) { }
                             if (balance == 0)
@@ -309,7 +308,7 @@ namespace AlgoWallet.Views
                     new TextBox
                     {
                         Text = "Transactions are getting fetched. If you do not see any transactions, check that your Algorand node is in Archival mode and the property isIndexerActive is true: https://developer.algorand.org/docs/reference/node/config/",                        
-                        Classes = new Avalonia.Controls.Classes("sp_empty_info")                        
+                        Classes = new Avalonia.Controls.Classes("sp_empty_info")
                     });
         }
 
@@ -402,11 +401,17 @@ namespace AlgoWallet.Views
             {
                 objectList = state as object[];
             }
-            else if(state is List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>)
-            {
-                objectList = (state as List<object>).ToArray();
-            }
-            if (objectList[0] is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair && objectList[1] is ulong amount)
+            //else if(state is List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>)
+            //{
+            //    var ol = (List<KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams>>)state;
+            //    var o2 = new List<object>();
+            //    foreach(var item in ol)
+            //    {
+            //        o2.Add(item);
+            //    }
+            //    objectList = o2.ToArray();
+            //}
+            if (objectList != null && objectList[0] is KeyValuePair<ulong, Algorand.Algod.Client.Model.AssetParams> pair && objectList[1] is ulong amount)
             {
                 Button btn = new Button()
                 {
@@ -961,6 +966,11 @@ namespace AlgoWallet.Views
                 }
             }
             sendingStatus.Text = "Send Success!";
+            sendToAddress.Text = "";
+            sendToAmount.Text = "";
+            this.FindControl<TextBox>("tb_sendToMessage").Text = "";
+            walletOperationTabControl.SelectedIndex = 0;
+
         }       
         private void ChangeWalletRefresh()
         {
