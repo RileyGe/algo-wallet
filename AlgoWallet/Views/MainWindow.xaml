@@ -219,8 +219,10 @@
           </StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0 30 0 0">
             <TextBlock Width="100" Text="Amount:" TextAlignment="Right" Margin="0 3 0 0"/>
-            <TextBox Margin="20 0 0 0" Width="350" Name="tb_sendToAmount"></TextBox>
-          </StackPanel>
+                        
+                        <TextBox Margin="20 0 0 0" Width="300" Name="tb_sendToAmount"></TextBox>
+                        <TextBlock Width="50" Text="Alogs"  TextAlignment="Right" Margin="0 3 0 0"/>
+                    </StackPanel>
           <StackPanel Orientation="Horizontal" Margin="0 30 0 0">
             <TextBlock Width="100" Text="Message:" TextAlignment="Right" Margin="0 3 0 0"/>
             <TextBox Margin="20 0 0 0" Width="350" Name="tb_sendToMessage"></TextBox>

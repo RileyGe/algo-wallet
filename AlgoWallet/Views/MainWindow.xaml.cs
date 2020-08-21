@@ -908,12 +908,16 @@ namespace AlgoWallet.Views
             }
             try
             {
-                sendToIntAmount = Convert.ToUInt64(sendToAmount.Text);
+                var algosAmount = Convert.ToDouble(sendToAmount.Text) * 1e6;
+                if(Math.Floor(algosAmount) == algosAmount && algosAmount > 0)
+                {
+                    sendToIntAmount = Convert.ToUInt64(algosAmount * 1e6);
+                }                
             }
             catch
             {
                 MessageBoxManager.GetMessageBoxStandardWindow("Amount Error",
-                    "The amount should be a unsigned int, please enter a right number.").ShowDialog(this);
+                    "The amount should be positive number, up to 6 decimals, please enter a right number.").ShowDialog(this);
                 sendToAmount.Focus();
                 sendingStatus.IsVisible = false;
                 return;
